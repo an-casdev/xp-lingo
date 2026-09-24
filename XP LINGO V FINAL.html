@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>English RPG — Level 1: The Awakening</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--gold:#ffdd00;--green:#4dfa6a;--red:#ff4444;--blue:#6ab4ff;--purple:#aa66ff;--dim:#888}
+html{background:#000;color:#fff;font-family:'Press Start 2P',monospace;scroll-behavior:smooth}
+body{max-width:820px;margin:0 auto;background:#000;min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.07) 2px,rgba(0,0,0,.07) 4px);pointer-events:none;z-index:9999}
+@keyframes blink{50%{opacity:0}}
+@keyframes slideIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+@keyframes pop{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+@keyframes burst{0%{opacity:1;transform:translate(0,0)}100%{opacity:0;transform:translate(var(--dx),var(--dy))}}
+@keyframes toastFade{0%{opacity:0}20%{opacity:1}80%{opacity:1}100%{opacity:0}}
+@keyframes levelUpPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,221,0,.4)}50%{box-shadow:0 0 20px 8px rgba(255,221,0,.15)}}
+@keyframes xpFill{from{width:0%}to{width:100%}}
+@keyframes dramaticReveal{0%{opacity:0;transform:scale(.7) translateY(30px)}60%{transform:scale(1.05) translateY(-5px)}100%{opacity:1;transform:scale(1) translateY(0)}}
+@keyframes glitch{0%,100%{text-shadow:none}10%{text-shadow:2px 0 var(--red),-2px 0 var(--blue)}20%{text-shadow:-2px 0 var(--red),2px 0 var(--blue)}30%{text-shadow:none}}
+@keyframes warnPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+.blink{animation:blink 1s step-start infinite}
+.screen{display:none;min-height:100vh;padding:20px 14px 50px;animation:slideIn .3s ease}
+.screen.active{display:block}
+#screen-start{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:40px 20px;text-align:center;background:radial-gradient(ellipse at center,#080014 0%,#000 70%)}
+#screen-start.active{display:flex}
+#hud{display:none;position:sticky;top:0;z-index:100;background:#000;border-bottom:2px solid #111;padding:7px 14px;align-items:center;gap:8px;flex-wrap:wrap}
+#hud.active{display:flex}
+.hud-name{font-size:6px;color:var(--gold);min-width:48px}
+.hud-xp-wrap{flex:1;display:flex;align-items:center;gap:7px}
+.hud-xp-label{font-size:5px;color:var(--green);white-space:nowrap}
+.hud-bar{flex:1;height:8px;background:#111;border:1px solid #222;min-width:50px}
+.hud-fill{height:100%;background:var(--green);transition:width 1.2s ease}
+.hud-pts{font-size:5px;color:var(--gold);white-space:nowrap}
+.hud-lv{font-size:7px;color:#fff;white-space:nowrap}
+.hud-stage-lbl{font-size:5px;color:var(--dim);white-space:nowrap}
+#saveToast{position:fixed;top:48px;right:10px;font-size:6px;color:var(--green);border:1px solid var(--green);padding:6px 10px;background:#001200;z-index:300;pointer-events:none;display:none;animation:toastFade 2.2s ease forwards}
+#noShortcut{display:none;position:fixed;inset:0;background:rgba(0,0,0,.97);z-index:800;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px}
+#noShortcut.on{display:flex}
+.nsc-skull{font-size:48px;margin-bottom:16px;animation:warnPulse 1s ease infinite}
+.nsc-title{font-size:clamp(9px,3vw,14px);color:var(--red);margin-bottom:14px;line-height:1.8;animation:glitch 2s infinite}
+.nsc-sub{font-size:6px;color:#555;line-height:2.8;margin-bottom:20px;max-width:380px}
+.nsc-quote{font-size:7px;color:var(--gold);border:2px solid var(--gold);padding:12px 18px;margin-bottom:22px;line-height:2.2;max-width:360px}
+.btn-nsc{border:3px solid var(--red);padding:12px 24px;font-family:inherit;font-size:7px;color:var(--red);background:#000;cursor:pointer;transition:all .15s}
+.btn-nsc:hover{background:var(--red);color:#000}
+.s-soul{display:block;margin:0 auto 22px}
+.s-stars{font-size:7px;color:var(--gold);letter-spacing:4px;margin-bottom:18px}
+.s-label{font-size:6px;color:var(--dim);letter-spacing:3px;margin-bottom:5px}
+.s-title{font-size:clamp(13px,4vw,20px);line-height:1.8;margin-bottom:4px}
+.s-title span{color:var(--gold)}
+.s-sub{font-size:6px;color:var(--dim);font-style:italic;margin-bottom:26px}
+.s-lvbox{border:3px solid #fff;padding:14px 34px;margin-bottom:26px;display:inline-block}
+.s-lvlabel{font-size:6px;color:#ccc;margin-bottom:4px}
+.s-lvnum{font-size:42px;color:var(--red);line-height:1}
+.s-lvclass{font-size:6px;color:var(--green);margin-top:5px}
+.s-hp{font-size:6px;color:var(--dim);margin-bottom:26px}
+.btn-start{border:3px solid var(--gold);padding:15px 36px;font-family:inherit;font-size:9px;color:#000;background:var(--gold);cursor:pointer;width:100%;max-width:280px;display:block;text-align:center;margin-bottom:10px;transition:all .1s}
+.btn-start:hover{background:#fff;border-color:#fff}
+.btn-start:active{transform:scale(.97)}
+.s-saveinfo{font-size:5px;color:#2a2a2a;margin-top:6px;font-style:italic;line-height:2}
+.s-tagline{font-size:6px;color:#2a2a2a;font-style:italic;margin-top:12px;line-height:2.2}
+#screen-map{padding:20px 14px 50px}
+.map-title{font-size:8px;color:var(--gold);text-align:center;margin-bottom:16px;padding-bottom:10px;border-bottom:2px solid #111}
+.progress-box{border:2px solid #1a1a1a;padding:12px;text-align:center;margin-bottom:14px;background:#030303}
+.progress-label{font-size:5px;color:var(--dim);margin-bottom:7px;letter-spacing:2px}
+.progress-track{width:100%;height:13px;background:#080808;border:2px solid #1a1a1a;margin:0 auto 7px}
+.progress-fill{height:100%;background:var(--green);transition:width 1.5s ease}
+.progress-pts{font-size:7px;color:var(--gold)}
+.howto-btn{display:flex;align-items:center;gap:10px;padding:11px 14px;border:2px solid #1a1a1a;margin-bottom:12px;cursor:pointer;transition:background .15s;background:#030303}
+.howto-btn:hover{background:#0a0a0a}
+.howto-icon{font-size:7px;color:var(--blue)}
+.howto-label{font-size:7px;color:#fff;flex:1}
+.howto-arrow{font-size:6px;color:var(--blue)}
+.stage-list{border:3px solid #fff;margin-bottom:14px}
+.stage-row{display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid #0e0e0e;font-size:7px;transition:background .15s}
+.stage-row:last-child{border-bottom:none}
+.stage-row.can-play{cursor:pointer}.stage-row.can-play:hover{background:#080808}
+.stage-row.is-locked{opacity:.4;cursor:default}
+.sr-id{min-width:28px;font-size:6px}
+.sr-name{flex:1;font-size:6px}
+.sr-xp{font-size:5px;color:var(--gold);min-width:50px;text-align:right}
+.sr-status{font-size:6px;min-width:46px;text-align:right}
+.st-play{color:var(--gold);animation:blink 1s step-start infinite}
+.st-done{color:var(--green)}.st-lock{color:#222}
+.map-hint{font-size:5px;color:#1e1e1e;text-align:center;padding:6px;font-style:italic}
+#screen-game,#screen-instructions{padding:0 14px 60px}
+.btn-back{border:2px solid #1a1a1a;padding:9px 18px;font-family:inherit;font-size:6px;color:#333;background:#000;cursor:pointer;margin-bottom:16px;transition:all .15s;display:block}
+.btn-back:hover{border-color:#fff;color:#fff}
+.stage-bar{background:#fff;color:#000;font-size:7px;padding:11px 14px;margin-bottom:14px;text-align:center;letter-spacing:1px}
+.sec{font-size:5px;color:#282828;letter-spacing:3px;margin:20px 0 8px;padding-bottom:4px;border-bottom:1px solid #0a0a0a}
+.dlg{border:3px solid #fff;margin-bottom:12px;overflow:hidden;animation:slideIn .3s ease}
+.dlg-top{display:flex;align-items:stretch}
+.dlg-face{width:74px;min-height:74px;border-right:3px solid #fff;display:flex;align-items:center;justify-content:center;background:#000;flex-shrink:0}
+.dlg-right{padding:10px 12px;flex:1}
+.dlg-name{font-size:5px;color:var(--gold);margin-bottom:6px;letter-spacing:2px}
+.dlg-text{font-size:7px;color:#fff;line-height:2.2}
+.dlg-foot{border-top:1px solid #111;padding:5px 12px;text-align:right;font-size:6px;color:#333}
+.alpha-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-bottom:14px}
+.alpha-card{border:2px solid #1a1a1a;padding:10px 6px;text-align:center;background:#030303;transition:border-color .2s}
+.alpha-card:hover{border-color:var(--gold)}
+.al{font-size:18px;color:var(--gold);display:block;margin-bottom:3px}
+.as{font-size:7px;color:var(--blue);display:block;margin-bottom:5px}
+.alpha-img{display:block;margin:4px auto}
+.alpha-word{font-size:6px;color:var(--green);display:block;margin-bottom:2px}
+.alpha-es{font-size:5px;color:var(--dim)}
+.img-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:9px;margin-bottom:14px}
+.img-card{border:2px solid #1a1a1a;padding:9px;text-align:center;background:#030303}
+.img-card svg{display:block;margin:0 auto 7px}
+.ic-en{font-size:7px;color:var(--green);margin-bottom:3px}
+.ic-es{font-size:5px;color:var(--dim)}
+.ic-pron{font-size:5px;color:var(--blue);margin-top:3px}
+.tbl-wrap{margin-bottom:14px;overflow-x:auto}
+.tbl-label{font-size:5px;color:var(--green);margin-bottom:7px;letter-spacing:2px}
+table.vt{width:100%;border-collapse:collapse;font-size:7px}
+table.vt th{border:2px solid #fff;padding:7px 9px;color:var(--gold);background:#0a0a0a;text-align:left}
+table.vt td{border:1px solid #141414;padding:7px 9px;background:#000}
+table.vt tr:nth-child(even) td{background:#050505}
+.ve{color:var(--green)}.vs{color:var(--dim)}.vx{color:#aaa;font-size:6px}.vp{color:var(--blue);font-size:5px}
+.sbox{border:3px solid #fff;padding:13px;margin-bottom:14px;font-size:7px;line-height:2.3}
+.battle{border:3px solid #fff;margin-bottom:14px;overflow:hidden}
+.battle-top{background:#fff;color:#000;font-size:7px;padding:9px 13px;text-align:center}
+.battle-body{padding:13px;background:#000}
+.boss-img{text-align:center;padding:12px 0 8px;border-bottom:1px solid #111;margin-bottom:10px}
+.hp-row{display:flex;align-items:center;gap:9px;margin-bottom:8px}
+.hp-lbl{font-size:5px;color:var(--dim);min-width:52px}
+.hp-bg{flex:1;height:14px;background:#080808;border:2px solid #1a1a1a}
+.hp-fill{height:100%;transition:width 1.5s ease}
+.hp-e{background:var(--red)}.hp-p{background:var(--green)}
+.hp-val{font-size:5px;color:#fff;min-width:42px;text-align:right}
+.btxt{font-size:6px;line-height:2.2;margin-bottom:12px;padding:8px;border:1px solid #0a0a0a;background:#030303}
+.by{color:var(--gold)}.bp{color:var(--dim)}.bb{color:var(--blue)}.br{color:var(--red)}
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cbtn{border:2px solid #1a1a1a;padding:10px 8px;font-family:inherit;font-size:6px;color:#fff;background:#000;cursor:pointer;text-align:left;transition:all .1s;line-height:1.8}
+.cbtn:hover:not([disabled]){border-color:var(--gold);color:var(--gold)}
+.cbtn.ok{border-color:var(--green);color:var(--green);background:#001500}
+.cbtn.no{border-color:var(--red);color:var(--red);background:#150000;animation:shake .3s ease}
+.cl{color:var(--dim);margin-right:4px}
+.boss-fail-area{display:none;text-align:center;padding:14px;border:2px solid var(--red);margin-top:10px;background:#0a0000}
+.boss-fail-txt{font-size:6px;color:var(--red);margin-bottom:12px;line-height:2.4}
+.btn-restart{border:3px solid var(--red);padding:12px 20px;font-family:inherit;font-size:7px;color:var(--red);background:#000;cursor:pointer;width:100%;max-width:280px;animation:blink .8s step-start infinite}
+.btn-restart:hover{background:var(--red);color:#000}
+.exbox{border:3px solid #1a1a1a;margin-bottom:14px;overflow:hidden}
+.ex-title{background:#1a1a1a;color:var(--gold);font-size:6px;padding:8px 12px;letter-spacing:2px}
+.ex-card{border-bottom:1px solid #0a0a0a;padding:10px 12px}
+.ex-q{font-size:7px;color:#fff;line-height:2;margin-bottom:8px}
+.ex-opts{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px}
+.exbtn{border:2px solid #1a1a1a;padding:8px 6px;font-family:inherit;font-size:6px;color:#aaa;background:#000;cursor:pointer;text-align:left;transition:all .1s;line-height:1.8}
+.exbtn:hover:not([disabled]){border-color:var(--blue);color:var(--blue)}
+.exbtn.ok{border-color:var(--green);color:var(--green);background:#001200}
+.exbtn.no{border-color:var(--red);color:var(--red);background:#120000;animation:shake .3s ease}
+.ex-fb{font-size:5px;margin-top:4px;min-height:12px}
+.ex-score{font-size:6px;padding:8px 12px;background:#030303;border-top:1px solid #0a0a0a}
+.story-box{border:3px solid var(--gold);padding:13px;margin-bottom:14px;background:#030000}
+.story-input{display:block;width:100%;background:#000;border:2px solid #1a1a1a;color:var(--green);font-family:'Press Start 2P',monospace;font-size:6px;padding:10px;min-height:130px;resize:vertical;margin-bottom:10px;line-height:2.2}
+.story-input:focus{outline:none;border-color:var(--gold)}
+.story-input::placeholder{color:#1a1a1a;font-size:5px}
+.btn-submit{border:3px solid var(--green);padding:12px 20px;font-family:inherit;font-size:7px;color:var(--green);background:#000;cursor:pointer;transition:all .15s;margin-bottom:8px}
+.btn-submit:hover{background:#001500;color:#fff}
+.story-feedback{font-size:6px;line-height:2.2;padding:10px;display:none;border:2px solid #0a0a0a;background:#030303}
+.path-box{border:3px solid #1a1a1a;padding:13px;margin-bottom:14px;background:#030303}
+.path-label{font-size:5px;color:var(--gold);margin-bottom:10px;letter-spacing:2px;text-align:center}
+.path-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pbtn{border:2px solid #1a1a1a;padding:12px 8px;font-family:inherit;font-size:6px;color:#aaa;background:#000;cursor:pointer;text-align:center;transition:all .15s;line-height:2.2}
+.pbtn:hover{border-color:var(--gold);color:var(--gold)}
+.pbtn.chosen{border-color:var(--green);color:var(--green);background:#001200}
+.picon{font-size:14px;display:block;margin-bottom:5px}
+.mission{border:2px solid #1a1a1a;margin-bottom:14px;overflow:hidden}
+.mission-head{background:#1a1a1a;padding:8px 12px;font-size:6px;color:var(--gold);letter-spacing:2px}
+.mission-body{padding:10px 12px}
+.mission-li{font-size:6px;color:#aaa;line-height:2.5;padding-left:10px}
+.mission-li::before{content:'► ';color:var(--gold)}
+.item{display:flex;align-items:center;gap:10px;border:2px solid #1a1a1a;padding:10px 12px;margin-bottom:8px;background:#030303}
+.item-name{font-size:6px;color:var(--gold);flex:1}
+.item-desc{font-size:5px;color:var(--dim)}
+#fbBar{position:fixed;bottom:0;left:0;right:0;padding:10px 20px;font-size:6px;text-align:center;z-index:200;transform:translateY(100%);transition:transform .3s;max-width:820px;margin:0 auto}
+#fbBar.ok{background:#001500;color:var(--green);border-top:2px solid var(--green);transform:translateY(0)}
+#fbBar.no{background:#150000;color:var(--red);border-top:2px solid var(--red);transform:translateY(0)}
+#fbBar.off{transform:translateY(100%)}
+#luOverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.93);z-index:500;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px 20px;animation:dramaticReveal .5s ease}
+#luOverlay.on{display:flex}
+.lu-title{font-size:clamp(10px,3vw,16px);color:var(--gold);margin-bottom:12px;animation:glitch 2s infinite;line-height:1.6}
+.lu-badge{font-size:clamp(7px,2vw,10px);color:var(--green);border:2px solid var(--green);padding:8px 16px;margin-bottom:14px;animation:levelUpPulse 1.5s ease infinite}
+.lu-xp-label{font-size:5px;color:var(--green);margin-bottom:6px;letter-spacing:2px}
+.lu-xp-bar{width:280px;max-width:100%;height:16px;background:#0a0a0a;border:2px solid var(--green);margin-bottom:18px;overflow:hidden}
+.lu-xp-fill{height:100%;background:var(--green);animation:xpFill 1.5s ease forwards}
+.lu-flavor{font-size:5px;color:#555;font-style:italic;line-height:3;margin-bottom:22px;max-width:400px}
+.btn-continue{border:3px solid var(--gold);padding:14px 30px;font-family:inherit;font-size:8px;color:#000;background:var(--gold);cursor:pointer;width:100%;max-width:280px}
+.btn-continue:hover{background:#fff}
+.pt{position:fixed;pointer-events:none;z-index:600;animation:burst .9s ease forwards;font-size:14px}
+#rp{position:fixed;top:0;left:0;height:3px;background:var(--gold);z-index:500;width:0%;transition:width .2s}
+.sc-area{margin-top:20px;text-align:center;display:none}
+.sc-badge{border:3px solid var(--green);padding:12px;color:var(--green);font-size:6px;margin-bottom:14px;line-height:2.2}
+.sc-badge span{display:block;color:var(--dim);font-size:5px;margin-top:5px}
+.btn-next{border:3px solid var(--gold);padding:14px 24px;font-family:inherit;font-size:7px;color:#000;background:var(--gold);cursor:pointer;width:100%;transition:all .1s}
+.btn-next:hover{background:#fff}
+.grammar-badge{display:inline-block;border:2px solid var(--purple);padding:4px 10px;font-size:5px;color:var(--purple);margin-bottom:10px;letter-spacing:2px}
+#screen-clear{padding:20px 14px 60px}
+.clear-box{border:4px solid #fff;padding:34px 20px;text-align:center;margin-top:20px}
+.clear-badge{display:inline-block;border:3px solid var(--gold);padding:10px 24px;font-size:7px;color:var(--gold);margin:13px 0;animation:levelUpPulse 1.5s ease infinite}
+.clear-char-msg{border:2px solid #0a0a0a;padding:12px;margin:8px 0;text-align:left;background:#030303}
+.clear-char-msg .char-name{font-size:5px;color:var(--gold);margin-bottom:6px}
+.clear-char-msg .char-quote{font-size:6px;color:#ccc;line-height:2.2}
+.locked-banner{border:4px solid #222;padding:20px;margin:20px 0;background:#050505}
+.locked-list-item{font-size:6px;color:#333;line-height:3;padding-left:10px}
+.locked-list-item::before{content:'❌ '}
+.hook-txt{font-size:7px;color:#fff;line-height:2.5;border:3px solid var(--gold);padding:16px;margin:14px 0;background:#030303}
+.hook-txt span{color:var(--gold)}
+.mercado-btn{border:3px solid var(--gold);padding:18px;font-family:inherit;font-size:9px;color:#000;background:var(--gold);cursor:pointer;width:100%;animation:pop .8s ease infinite;margin-bottom:10px}
+.urgency-txt{font-size:5px;color:var(--red);animation:blink .6s step-start infinite;margin-bottom:16px}
+@media(max-width:480px){
+  .choices,.path-btns,.ex-opts,.img-row{grid-template-columns:1fr}
+  .alpha-grid{grid-template-columns:repeat(auto-fill,minmax(100px,1fr))}
+  .hud-stage-lbl{display:none}
+}
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-track{background:#000}
+::-webkit-scrollbar-thumb{background:#1a1a1a}
+</style>
+</head>
+<body>
+<div id="rp"></div>
+<div id="fbBar" class="off">—</div>
+<div id="saveToast">💾 PROGRESS SAVED</div>
+
+<div id="noShortcut">
+  <div class="nsc-skull">⚔️💀⚔️</div>
+  <div class="nsc-title">NO SHORTCUTS, TRAVELER.</div>
+  <div class="nsc-sub">You cannot face the BOSS without completing<br>all the exercises first.<br><br>True warriors train before they fight.</div>
+  <div class="nsc-quote">"The path to mastery has no shortcuts.<br>Complete your training first."<br><br><span style="color:var(--dim);font-size:5px">— LYRA, Keeper of the English Kingdom</span></div>
+  <button class="btn-nsc" onclick="closeNoShortcut()">◄ BACK TO TRAINING</button>
+</div>
+
+<div id="luOverlay">
+  <svg width="42" height="42" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges" style="margin-bottom:16px">
+    <rect x="5" y="1" width="2" height="1" fill="#ffdd00"/><rect x="4" y="2" width="4" height="1" fill="#ffdd00"/>
+    <rect x="3" y="3" width="6" height="3" fill="#ffdd00"/><rect x="4" y="6" width="4" height="1" fill="#ffdd00"/>
+    <rect x="5" y="7" width="2" height="2" fill="#ffdd00"/>
+  </svg>
+  <div class="lu-title" id="luTitle">STAGE CLEARED!</div>
+  <div class="lu-badge" id="luBadge">+100 XP</div>
+  <div class="lu-xp-label">XP GAINED</div>
+  <div class="lu-xp-bar"><div class="lu-xp-fill"></div></div>
+  <div class="lu-flavor" id="luFlavor"></div>
+  <button class="btn-continue" id="luBtn" onclick="closeLU()">► CONTINUE</button>
+</div>
+
+<div id="hud">
+  <span class="hud-name">HERO</span>
+  <div class="hud-xp-wrap">
+    <span class="hud-xp-label">XP</span>
+    <div class="hud-bar"><div class="hud-fill" id="hudFill" style="width:0%"></div></div>
+    <span class="hud-pts" id="hudPts">0/1000</span>
+  </div>
+  <span class="hud-lv">LV 1</span>
+  <span class="hud-stage-lbl" id="hudStage">1-1</span>
+</div>
+
+<div id="screen-start" class="screen active">
+  <svg class="s-soul" width="36" height="36" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+    <rect x="8" y="2" width="4" height="2" fill="#ff4444"/><rect x="6" y="4" width="8" height="2" fill="#ff4444"/>
+    <rect x="4" y="6" width="12" height="2" fill="#ff4444"/><rect x="4" y="8" width="12" height="2" fill="#ff4444"/>
+    <rect x="6" y="10" width="8" height="2" fill="#ff4444"/><rect x="8" y="12" width="4" height="2" fill="#ff4444"/>
+    <rect x="9" y="14" width="2" height="2" fill="#ff4444"/>
+  </svg>
+  <div class="s-stars">* * * * * * * * * *</div>
+  <div class="s-label">THE ULTIMATE GUIDE TO</div>
+  <div class="s-title">MASTER YOUR <span>ENGLISH</span></div>
+  <div class="s-sub">* an RPG language adventure *</div>
+  <div class="s-lvbox">
+    <div class="s-lvlabel">LEVEL</div>
+    <div class="s-lvnum">1</div>
+    <div class="s-lvclass">[ THE AWAKENING ]</div>
+  </div>
+  <div class="s-hp">HP <span style="color:#111">░░░░░░░░░░░░░░░░</span> 0/1000</div>
+  <button class="btn-start" onclick="startGame()">🎮 START GAME</button>
+  <div class="s-saveinfo">💾 Your progress is saved automatically on this device</div>
+  <div class="s-tagline">* 8 stages · vocabulary · exercises · boss battles *<br>* XP system · progress saved · level up! *</div>
+</div>
+
+<div id="screen-map" class="screen">
+  <div class="map-title">★ WORLD MAP — LEVEL 1 ★</div>
+  <div class="progress-box">
+    <div class="progress-label">TOTAL PROGRESS</div>
+    <div class="progress-track"><div class="progress-fill" id="mapFill" style="width:0%"></div></div>
+    <div class="progress-pts" id="mapPts">0 / 1000 XP</div>
+  </div>
+  <div class="howto-btn" onclick="openInstructions()">
+    <span class="howto-icon">📋</span>
+    <span class="howto-label">HOW TO PLAY + 30-DAY STUDY PLAN</span>
+    <span class="howto-arrow">OPEN ►</span>
+  </div>
+  <div class="stage-list" id="stageList"></div>
+  <div class="map-hint">* complete each stage to unlock the next one *</div>
+</div>
+
+<div id="screen-game" class="screen">
+  <button class="btn-back" onclick="goMap()">◄ WORLD MAP</button>
+  <div id="gameContent"></div>
+</div>
+
+<div id="screen-instructions" class="screen">
+  <button class="btn-back" onclick="goMap()">◄ WORLD MAP</button>
+  <div id="instrContent"></div>
+</div>
+
+<div id="screen-clear" class="screen">
+  <div class="clear-box">
+    <div style="font-size:6px;color:var(--dim);margin-bottom:12px;font-style:italic">💬 "The world goes silent..."</div>
+    <div style="font-size:6px;color:var(--blue);margin-bottom:20px;font-style:italic">💬 "A voice speaks to you in English... and this time... you understand."</div>
+    <div style="border:2px solid #1a1a1a;padding:14px;margin-bottom:16px;background:#030303">
+      <div style="font-size:6px;color:var(--dim);margin-bottom:8px">Someone says:</div>
+      <div style="font-size:10px;color:var(--blue);margin-bottom:12px">"Hi, where are you from?"</div>
+      <div style="font-size:5px;color:var(--dim);margin-bottom:6px">Your answer:</div>
+      <div style="font-size:10px;color:var(--green)">"Hi! I'm from Peru."</div>
+    </div>
+    <div style="font-size:6px;color:var(--gold);margin-bottom:6px;font-style:italic">⚡ "A few days ago you couldn't answer this..."</div>
+    <div style="font-size:6px;color:#fff;margin-bottom:20px;font-style:italic">⚡ "Now you can."</div>
+    <div style="font-size:clamp(10px,3vw,18px);color:#fff;margin-bottom:9px;line-height:1.7;animation:glitch 3s infinite">🏆 LEVEL 1 COMPLETE!</div>
+    <div style="font-size:7px;color:var(--green);margin-bottom:4px">████████████████████ 1000/1000 XP</div>
+    <div style="font-size:5px;color:var(--dim);margin-bottom:18px">TITLE UNLOCKED:</div>
+    <div class="clear-badge">🏅 [ ENGLISH APPRENTICE ]</div>
+    <div style="border:2px solid #141414;padding:13px;margin:16px 0;text-align:left">
+      <div style="font-size:6px;color:var(--gold);margin-bottom:9px">★ YOU COMPLETED:</div>
+      <div style="font-size:6px;color:var(--green);line-height:3">✅ Your first real conversation<br>✅ Your first English phrases<br>✅ Your first step in English</div>
+    </div>
+    <div class="clear-char-msg"><div class="char-name">LYRA:</div><div class="char-quote">"I told you... you just needed to start."</div></div>
+    <div class="clear-char-msg"><div class="char-name">CRUX:</div><div class="char-quote">"...I didn't expect you to come this far. NYEH."</div></div>
+    <div class="clear-char-msg"><div class="char-name">ZACK:</div><div class="char-quote">"Now you can order whatever you want 😏"</div></div>
+    <div class="clear-char-msg"><div class="char-name">NOVA:</div><div class="char-quote">"The world is bigger when you understand it."</div></div>
+    <div style="margin:24px 0 10px;font-size:6px;color:var(--dim)">⚠️ BUT...</div>
+    <div style="font-size:6px;color:#555;line-height:3;margin-bottom:12px;font-style:italic">💬 "There are still conversations you don't understand..."<br>💬 "There are still words you don't know..."<br>💬 "There is still one more level."</div>
+    <div class="locked-banner">
+      <div style="font-size:clamp(8px,2.5vw,14px);color:#888;margin-bottom:14px;animation:blink 1.2s step-start infinite">🔒 LEVEL 2 — COMING SOON</div>
+      <div style="font-size:6px;color:var(--dim);margin-bottom:14px;line-height:2.5">In Level 1 you learned to <span style="color:#fff">survive</span>...<br>But you still can't:</div>
+      <div style="padding:10px">
+        <div class="locked-list-item" style="color:#555">Express complex ideas in English</div>
+        <div class="locked-list-item" style="color:#555">Understand long conversations</div>
+        <div class="locked-list-item" style="color:#555">Speak with real fluency</div>
+        <div class="locked-list-item" style="color:#555">Use Past, Future & Modal verbs</div>
+      </div>
+      <div style="border:2px solid #333;padding:10px;margin-top:12px;background:#0a0a0a">
+        <div style="font-size:5px;color:var(--gold);margin-bottom:8px;letter-spacing:2px">★ LEVEL 2 WILL INCLUDE:</div>
+        <div style="font-size:6px;color:#666;line-height:2.8">
+          ⚔️ Stage 2-1 — Past Simple: "I worked, She went"<br>
+          ⚔️ Stage 2-2 — Future: "I will travel, I'm going to..."<br>
+          ⚔️ Stage 2-3 — WH Questions: What, Where, Why, How<br>
+          ⚔️ Stage 2-4 — Adjectives & Comparatives<br>
+          ⚔️ Stage 2-5 to 2-8 — And much more...
+        </div>
+      </div>
+    </div>
+    <div class="hook-txt">💬 "You can stay here..."<br>💬 "or you can advance and <span>stop translating in your head.</span>"</div>
+    <div class="urgency-txt">🔥 Special launch price — limited time 🔥</div>
+    <button class="mercado-btn" onclick="goLevel2()">🎮 UNLOCK LEVEL 2 ►</button>
+    <div style="font-size:5px;color:#444;margin-bottom:6px">👉 Speak with more fluency · Understand real conversations · Express opinions in English</div>
+    <div style="font-size:6px;color:#333;font-style:italic;margin:16px 0">"The next level... will change how you think."</div>
+    <button onclick="goMap()" style="border:2px solid #1a1a1a;padding:10px 20px;font-family:inherit;font-size:6px;color:#333;background:#000;cursor:pointer;margin-top:8px" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#333'">◄ VIEW MY JOURNEY</button>
+  </div>
+</div>
+
+<script>
+'use strict';
+const SK='english_rpg_lv1_v7';
+const ST={xp:0,maxXp:1000,cur:0,done:new Set(),exDone:{}};
+function save(){try{localStorage.setItem(SK,JSON.stringify({xp:ST.xp,done:[...ST.done],exDone:ST.exDone}));const t=document.getElementById('saveToast');t.style.display='block';t.style.animation='none';void t.offsetWidth;t.style.animation='toastFade 2.2s ease forwards';setTimeout(()=>t.style.display='none',2300);}catch(e){}}
+function load(){try{const r=localStorage.getItem(SK);if(!r)return false;const d=JSON.parse(r);ST.xp=d.xp||0;ST.done=new Set(d.done||[]);ST.exDone=d.exDone||{};return true;}catch(e){return false;}}
+
+const SVG={
+LYRA:`<svg width="64" height="64" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="5" y="1" width="6" height="1" fill="#6a3fa0"/><rect x="4" y="2" width="8" height="1" fill="#6a3fa0"/><rect x="3" y="3" width="10" height="1" fill="#6a3fa0"/><rect x="2" y="4" width="12" height="1" fill="#8855cc"/><rect x="7" y="2" width="2" height="2" fill="#ffdd00"/><rect x="4" y="5" width="8" height="5" fill="#f5c89a"/><rect x="5" y="6" width="2" height="2" fill="#4a2a80"/><rect x="9" y="6" width="2" height="2" fill="#4a2a80"/><rect x="6" y="9" width="4" height="1" fill="#c07050"/><rect x="4" y="10" width="8" height="1" fill="#ddd"/><rect x="3" y="11" width="10" height="5" fill="#5544aa"/><rect x="13" y="8" width="1" height="5" fill="#8b5e3c"/><rect x="13" y="7" width="2" height="1" fill="#ffdd00"/></svg>`,
+HERO:`<svg width="64" height="64" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="4" y="1" width="8" height="1" fill="#3377cc"/><rect x="3" y="2" width="10" height="3" fill="#3377cc"/><rect x="5" y="3" width="6" height="2" fill="#88aaff"/><rect x="4" y="5" width="8" height="4" fill="#f5c89a"/><rect x="5" y="6" width="2" height="2" fill="#222"/><rect x="9" y="6" width="2" height="2" fill="#222"/><rect x="5" y="6" width="1" height="1" fill="#fff"/><rect x="9" y="6" width="1" height="1" fill="#fff"/><rect x="6" y="8" width="4" height="1" fill="#c07050"/><rect x="3" y="9" width="10" height="7" fill="#3377cc"/><rect x="1" y="9" width="3" height="5" fill="#4488dd"/><rect x="12" y="9" width="3" height="5" fill="#4488dd"/><rect x="13" y="10" width="1" height="6" fill="#888"/><rect x="12" y="12" width="3" height="1" fill="#ffdd00"/></svg>`,
+CRUX:`<svg width="64" height="64" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="4" y="1" width="8" height="6" fill="#e8e8e8"/><rect x="3" y="2" width="10" height="4" fill="#e8e8e8"/><rect x="5" y="3" width="2" height="2" fill="#000"/><rect x="9" y="3" width="2" height="2" fill="#000"/><rect x="7" y="5" width="2" height="1" fill="#bbb"/><rect x="4" y="7" width="8" height="2" fill="#e8e8e8"/><rect x="3" y="9" width="10" height="7" fill="#777"/><rect x="2" y="9" width="2" height="2" fill="#888"/><rect x="12" y="9" width="2" height="2" fill="#888"/><rect x="13" y="11" width="1" height="4" fill="#aaa"/><rect x="12" y="12" width="3" height="1" fill="#ffdd00"/></svg>`,
+ZACK:`<svg width="64" height="64" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="5" y="1" width="6" height="2" fill="#ff6622"/><rect x="4" y="3" width="8" height="5" fill="#f5c89a"/><rect x="5" y="4" width="2" height="2" fill="#333"/><rect x="9" y="4" width="2" height="2" fill="#333"/><rect x="5" y="4" width="1" height="1" fill="#fff"/><rect x="9" y="4" width="1" height="1" fill="#fff"/><rect x="6" y="7" width="4" height="1" fill="#ff6622"/><rect x="3" y="8" width="10" height="8" fill="#cc4411"/><rect x="1" y="8" width="3" height="5" fill="#cc4411"/><rect x="12" y="8" width="3" height="5" fill="#cc4411"/></svg>`,
+NOVA:`<svg width="64" height="64" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="6" y="0" width="4" height="1" fill="#4dfa6a"/><rect x="5" y="1" width="6" height="1" fill="#4dfa6a"/><rect x="4" y="2" width="8" height="5" fill="#f0d0a0"/><rect x="5" y="3" width="2" height="2" fill="#115511"/><rect x="9" y="3" width="2" height="2" fill="#115511"/><rect x="5" y="3" width="1" height="1" fill="#88ff88"/><rect x="9" y="3" width="1" height="1" fill="#88ff88"/><rect x="6" y="6" width="4" height="1" fill="#cc8866"/><rect x="3" y="7" width="10" height="9" fill="#22aa44"/><rect x="1" y="7" width="3" height="5" fill="#22aa44"/><rect x="12" y="7" width="3" height="5" fill="#22aa44"/></svg>`,
+};
+
+// BOSS PIXEL ART
+const BOSS={
+B1:`<svg width="80" height="80" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="3" y="2" width="14" height="2" fill="#ff4444"/><rect x="2" y="4" width="16" height="10" fill="#cc2222"/><rect x="3" y="5" width="3" height="3" fill="#000"/><rect x="14" y="5" width="3" height="3" fill="#000"/><rect x="4" y="5" width="1" height="1" fill="#ff8888"/><rect x="15" y="5" width="1" height="1" fill="#ff8888"/><rect x="7" y="9" width="6" height="2" fill="#880000"/><rect x="2" y="14" width="16" height="4" fill="#aa1111"/><rect x="1" y="9" width="2" height="4" fill="#cc2222"/><rect x="17" y="9" width="2" height="4" fill="#cc2222"/><rect x="6" y="13" width="2" height="1" fill="#ffdd00"/><rect x="12" y="13" width="2" height="1" fill="#ffdd00"/></svg>`,
+B2:`<svg width="80" height="80" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="4" y="1" width="12" height="2" fill="#ffdd00"/><rect x="3" y="3" width="14" height="10" fill="#cc9900"/><rect x="4" y="4" width="4" height="4" fill="#000"/><rect x="12" y="4" width="4" height="4" fill="#000"/><rect x="5" y="5" width="2" height="2" fill="#ffdd00"/><rect x="13" y="5" width="2" height="2" fill="#ffdd00"/><rect x="7" y="9" width="6" height="2" fill="#ffaa00"/><rect x="2" y="6" width="2" height="6" fill="#cc9900"/><rect x="16" y="6" width="2" height="6" fill="#cc9900"/><rect x="3" y="13" width="14" height="5" fill="#aa7700"/></svg>`,
+B3:`<svg width="80" height="80" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="5" y="0" width="10" height="2" fill="#aa66ff"/><rect x="3" y="2" width="14" height="3" fill="#8844dd"/><rect x="2" y="5" width="16" height="8" fill="#7733bb"/><rect x="3" y="6" width="3" height="3" fill="#000"/><rect x="14" y="6" width="3" height="3" fill="#000"/><rect x="4" y="7" width="1" height="1" fill="#aa66ff"/><rect x="15" y="7" width="1" height="1" fill="#aa66ff"/><rect x="7" y="10" width="6" height="1" fill="#330066"/><rect x="3" y="13" width="14" height="5" fill="#6622aa"/><rect x="1" y="10" width="2" height="5" fill="#8844dd"/><rect x="17" y="10" width="2" height="5" fill="#8844dd"/></svg>`,
+B4:`<svg width="80" height="80" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="4" y="2" width="12" height="2" fill="#4dfa6a"/><rect x="3" y="4" width="14" height="9" fill="#22cc44"/><rect x="4" y="5" width="3" height="3" fill="#000"/><rect x="13" y="5" width="3" height="3" fill="#000"/><rect x="5" y="6" width="1" height="1" fill="#4dfa6a"/><rect x="14" y="6" width="1" height="1" fill="#4dfa6a"/><rect x="7" y="10" width="6" height="1" fill="#004400"/><rect x="2" y="7" width="2" height="5" fill="#22cc44"/><rect x="16" y="7" width="2" height="5" fill="#22cc44"/><rect x="3" y="13" width="14" height="5" fill="#1a9933"/></svg>`,
+B5:`<svg width="80" height="80" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="5" y="1" width="10" height="2" fill="#6ab4ff"/><rect x="3" y="3" width="14" height="12" fill="#3377cc"/><rect x="4" y="4" width="12" height="10" fill="#1155aa"/><rect x="9" y="5" width="2" height="4" fill="#6ab4ff"/><rect x="9" y="9" width="4" height="2" fill="#6ab4ff"/><rect x="4" y="4" width="1" height="1" fill="#88ccff"/><rect x="15" y="4" width="1" height="1" fill="#88ccff"/><rect x="3" y="15" width="14" height="3" fill="#2266bb"/><rect x="1" y="8" width="2" height="4" fill="#3377cc"/><rect x="17" y="8" width="2" height="4" fill="#3377cc"/></svg>`,
+B6:`<svg width="80" height="80" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="5" y="1" width="10" height="2" fill="#ff8844"/><rect x="3" y="3" width="14" height="11" fill="#cc5500"/><rect x="4" y="5" width="3" height="3" fill="#000"/><rect x="13" y="5" width="3" height="3" fill="#000"/><rect x="5" y="6" width="1" height="1" fill="#ffaa66"/><rect x="14" y="6" width="1" height="1" fill="#ffaa66"/><rect x="7" y="9" width="6" height="3" fill="#880000"/><rect x="1" y="6" width="2" height="5" fill="#cc5500"/><rect x="17" y="6" width="2" height="5" fill="#cc5500"/><rect x="3" y="14" width="14" height="4" fill="#aa4400"/></svg>`,
+B7:`<svg width="80" height="80" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="2" y="3" width="16" height="3" fill="#ff66aa"/><rect x="3" y="6" width="14" height="8" fill="#cc3377"/><rect x="4" y="7" width="4" height="3" fill="#000"/><rect x="12" y="7" width="4" height="3" fill="#000"/><rect x="5" y="8" width="2" height="1" fill="#ff66aa"/><rect x="13" y="8" width="2" height="1" fill="#ff66aa"/><rect x="6" y="11" width="8" height="2" fill="#880033"/><rect x="1" y="8" width="2" height="4" fill="#cc3377"/><rect x="17" y="8" width="2" height="4" fill="#cc3377"/><rect x="3" y="14" width="14" height="4" fill="#aa2255"/></svg>`,
+B8:`<svg width="100" height="100" viewBox="0 0 25 25" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="6" y="1" width="13" height="3" fill="#333"/><rect x="4" y="4" width="17" height="14" fill="#222"/><rect x="5" y="5" width="5" height="5" fill="#111"/><rect x="15" y="5" width="5" height="5" fill="#111"/><rect x="6" y="6" width="3" height="3" fill="#ff4444"/><rect x="16" y="6" width="3" height="3" fill="#ff4444"/><rect x="7" y="7" width="1" height="1" fill="#ff0000"/><rect x="17" y="7" width="1" height="1" fill="#ff0000"/><rect x="8" y="13" width="9" height="3" fill="#000"/><rect x="9" y="14" width="7" height="1" fill="#ff4444"/><rect x="2" y="8" width="2" height="8" fill="#222"/><rect x="21" y="8" width="2" height="8" fill="#222"/><rect x="4" y="18" width="17" height="5" fill="#111"/><rect x="1" y="19" width="3" height="4" fill="#222"/><rect x="21" y="19" width="3" height="4" fill="#222"/></svg>`,
+};
+
+const PX={
+house:`<svg width="48" height="48" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="1" y="5" width="10" height="7" fill="#8b4513"/><rect x="2" y="6" width="8" height="6" fill="#cc6633"/><rect x="0" y="5" width="12" height="1" fill="#555"/><rect x="2" y="3" width="8" height="3" fill="#cc3333"/><rect x="1" y="4" width="10" height="1" fill="#aa2222"/><rect x="4" y="8" width="4" height="4" fill="#4a3000"/><rect x="2" y="7" width="2" height="2" fill="#88ccff"/><rect x="8" y="7" width="2" height="2" fill="#88ccff"/></svg>`,
+cat:`<svg width="48" height="48" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="3" y="1" width="6" height="5" fill="#888"/><rect x="2" y="2" width="8" height="4" fill="#888"/><rect x="2" y="1" width="2" height="2" fill="#888"/><rect x="8" y="1" width="2" height="2" fill="#888"/><rect x="4" y="3" width="1" height="1" fill="#111"/><rect x="7" y="3" width="1" height="1" fill="#111"/><rect x="5" y="5" width="2" height="1" fill="#ffaaaa"/><rect x="2" y="6" width="8" height="4" fill="#888"/><rect x="1" y="7" width="2" height="3" fill="#888"/><rect x="9" y="7" width="2" height="3" fill="#888"/></svg>`,
+dog:`<svg width="48" height="48" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="2" y="2" width="7" height="5" fill="#b87040"/><rect x="1" y="3" width="9" height="4" fill="#b87040"/><rect x="1" y="2" width="2" height="3" fill="#8b5020"/><rect x="3" y="4" width="1" height="1" fill="#111"/><rect x="6" y="4" width="1" height="1" fill="#111"/><rect x="4" y="6" width="3" height="1" fill="#8b5020"/><rect x="2" y="7" width="8" height="3" fill="#b87040"/><rect x="2" y="10" width="2" height="2" fill="#b87040"/><rect x="5" y="10" width="2" height="2" fill="#b87040"/><rect x="8" y="10" width="2" height="2" fill="#b87040"/></svg>`,
+book:`<svg width="48" height="48" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="1" y="1" width="10" height="10" fill="#3355aa"/><rect x="2" y="2" width="8" height="8" fill="#4466cc"/><rect x="5" y="1" width="1" height="10" fill="#2244aa"/><rect x="3" y="3" width="1" height="1" fill="#88aaff"/><rect x="3" y="5" width="1" height="1" fill="#88aaff"/><rect x="7" y="3" width="2" height="1" fill="#88aaff"/><rect x="7" y="5" width="2" height="1" fill="#88aaff"/><rect x="7" y="7" width="2" height="1" fill="#88aaff"/></svg>`,
+water:`<svg width="48" height="48" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="4" y="0" width="4" height="2" fill="#88ccff"/><rect x="3" y="2" width="6" height="8" fill="#44aaff"/><rect x="2" y="3" width="8" height="7" fill="#44aaff"/><rect x="3" y="10" width="6" height="1" fill="#2288dd"/><rect x="4" y="4" width="1" height="2" fill="#88ddff"/><rect x="7" y="6" width="1" height="2" fill="#88ddff"/></svg>`,
+food:`<svg width="48" height="48" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="2" y="6" width="8" height="4" fill="#e8a855"/><rect x="1" y="7" width="10" height="3" fill="#e8a855"/><rect x="2" y="5" width="8" height="2" fill="#cc8833"/><rect x="3" y="3" width="2" height="2" fill="#44aa44"/><rect x="7" y="3" width="2" height="2" fill="#44aa44"/><rect x="3" y="7" width="6" height="2" fill="#cc6622"/></svg>`,
+phone:`<svg width="48" height="48" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="3" y="0" width="6" height="12" fill="#333"/><rect x="4" y="1" width="4" height="7" fill="#44aaff"/><rect x="4" y="9" width="4" height="2" fill="#222"/><rect x="5" y="9" width="2" height="1" fill="#555"/></svg>`,
+car:`<svg width="48" height="48" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="1" y="5" width="10" height="5" fill="#cc3333"/><rect x="2" y="3" width="8" height="3" fill="#aa2222"/><rect x="3" y="4" width="2" height="2" fill="#88ccff"/><rect x="7" y="4" width="2" height="2" fill="#88ccff"/><rect x="0" y="6" width="12" height="3" fill="#cc3333"/><rect x="2" y="9" width="2" height="2" fill="#555"/><rect x="8" y="9" width="2" height="2" fill="#555"/><rect x="0" y="7" width="1" height="1" fill="#ffdd00"/><rect x="11" y="7" width="1" height="1" fill="#ff4444"/></svg>`,
+tree:`<svg width="48" height="48" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="5" y="9" width="2" height="3" fill="#8b4513"/><rect x="3" y="6" width="6" height="4" fill="#33aa33"/><rect x="2" y="4" width="8" height="4" fill="#44bb44"/><rect x="4" y="2" width="4" height="4" fill="#55cc55"/><rect x="5" y="0" width="2" height="3" fill="#66dd66"/></svg>`,
+sun:`<svg width="48" height="48" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="5" y="0" width="2" height="2" fill="#ffdd00"/><rect x="5" y="10" width="2" height="2" fill="#ffdd00"/><rect x="0" y="5" width="2" height="2" fill="#ffdd00"/><rect x="10" y="5" width="2" height="2" fill="#ffdd00"/><rect x="1" y="1" width="2" height="2" fill="#ffdd00"/><rect x="9" y="1" width="2" height="2" fill="#ffdd00"/><rect x="1" y="9" width="2" height="2" fill="#ffdd00"/><rect x="9" y="9" width="2" height="2" fill="#ffdd00"/><rect x="3" y="3" width="6" height="6" fill="#ffcc00"/><rect x="4" y="4" width="4" height="4" fill="#ffee44"/></svg>`,
+moon:`<svg width="48" height="48" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="4" y="1" width="5" height="1" fill="#ddddaa"/><rect x="2" y="2" width="6" height="1" fill="#ddddaa"/><rect x="1" y="3" width="6" height="6" fill="#ddddaa"/><rect x="2" y="9" width="6" height="1" fill="#ddddaa"/><rect x="4" y="10" width="4" height="1" fill="#ddddaa"/><rect x="5" y="3" width="3" height="6" fill="#000"/><rect x="6" y="2" width="3" height="7" fill="#000"/></svg>`,
+fire:`<svg width="48" height="48" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="5" y="0" width="2" height="2" fill="#ff4444"/><rect x="4" y="2" width="4" height="2" fill="#ff6622"/><rect x="3" y="4" width="6" height="3" fill="#ff8800"/><rect x="2" y="7" width="8" height="3" fill="#ffaa00"/><rect x="3" y="10" width="6" height="2" fill="#ffcc00"/><rect x="5" y="3" width="2" height="3" fill="#ffcc00"/></svg>`,
+apple:`<svg width="48" height="48" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="6" y="0" width="1" height="2" fill="#44aa44"/><rect x="4" y="2" width="5" height="1" fill="#ee4444"/><rect x="3" y="3" width="7" height="5" fill="#ee4444"/><rect x="2" y="4" width="9" height="4" fill="#ee4444"/><rect x="3" y="8" width="7" height="2" fill="#ee4444"/><rect x="4" y="10" width="5" height="1" fill="#cc2222"/><rect x="4" y="4" width="2" height="2" fill="#ff8888"/></svg>`,
+music:`<svg width="48" height="48" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="4" y="1" width="1" height="7" fill="#fff"/><rect x="7" y="0" width="1" height="6" fill="#fff"/><rect x="4" y="1" width="4" height="1" fill="#fff"/><rect x="2" y="8" width="4" height="2" fill="#888"/><rect x="5" y="6" width="4" height="2" fill="#888"/><rect x="1" y="9" width="2" height="2" fill="#aaa"/><rect x="4" y="7" width="2" height="2" fill="#aaa"/></svg>`,
+star:`<svg width="48" height="48" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="5" y="0" width="2" height="2" fill="#ffdd00"/><rect x="0" y="4" width="12" height="2" fill="#ffdd00"/><rect x="2" y="6" width="8" height="2" fill="#ffdd00"/><rect x="3" y="8" width="2" height="3" fill="#ffdd00"/><rect x="7" y="8" width="2" height="3" fill="#ffdd00"/><rect x="4" y="5" width="4" height="2" fill="#ffaa00"/></svg>`,
+city:`<svg width="48" height="48" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="0" y="6" width="3" height="6" fill="#557799"/><rect x="1" y="4" width="3" height="8" fill="#4466aa"/><rect x="4" y="2" width="4" height="10" fill="#335588"/><rect x="8" y="5" width="4" height="7" fill="#557799"/><rect x="1" y="6" width="1" height="1" fill="#ffdd88"/><rect x="2" y="8" width="1" height="1" fill="#ffdd88"/><rect x="5" y="4" width="1" height="1" fill="#88ccff"/><rect x="7" y="4" width="1" height="1" fill="#88ccff"/><rect x="5" y="7" width="1" height="1" fill="#88ccff"/><rect x="9" y="7" width="1" height="1" fill="#ffdd88"/><rect x="0" y="11" width="12" height="1" fill="#222"/></svg>`,
+};
+
+// ALPHABET DATA: [letter, pronunciation, example word, translation, mini pixel SVG inline]
+const ALPHA=[
+['A','/ei/','Apple','(manzana)','<svg width="32" height="32" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="6" y="0" width="1" height="2" fill="#44aa44"/><rect x="4" y="2" width="5" height="1" fill="#ee4444"/><rect x="3" y="3" width="7" height="5" fill="#ee4444"/><rect x="2" y="4" width="9" height="4" fill="#ee4444"/><rect x="3" y="8" width="7" height="2" fill="#ee4444"/><rect x="4" y="10" width="5" height="1" fill="#cc2222"/><rect x="4" y="4" width="2" height="2" fill="#ff8888"/></svg>'],
+['B','/bi/','Ball','(pelota)','<svg width="32" height="32" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="3" y="1" width="6" height="10" fill="#cc3333"/><rect x="2" y="2" width="8" height="8" fill="#cc3333"/><rect x="5" y="2" width="2" height="8" fill="#ee5555"/><rect x="3" y="4" width="6" height="1" fill="#ee5555"/><rect x="3" y="7" width="6" height="1" fill="#ee5555"/></svg>'],
+['C','/si/','Cat','(gato)','<svg width="32" height="32" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="3" y="1" width="6" height="5" fill="#888"/><rect x="2" y="2" width="8" height="4" fill="#888"/><rect x="2" y="1" width="2" height="2" fill="#888"/><rect x="8" y="1" width="2" height="2" fill="#888"/><rect x="4" y="3" width="1" height="1" fill="#111"/><rect x="7" y="3" width="1" height="1" fill="#111"/><rect x="2" y="6" width="8" height="4" fill="#888"/></svg>'],
+['D','/di/','Dog','(perro)','<svg width="32" height="32" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="2" y="2" width="7" height="5" fill="#b87040"/><rect x="1" y="3" width="9" height="4" fill="#b87040"/><rect x="1" y="2" width="2" height="3" fill="#8b5020"/><rect x="3" y="4" width="1" height="1" fill="#111"/><rect x="6" y="4" width="1" height="1" fill="#111"/><rect x="2" y="7" width="8" height="3" fill="#b87040"/></svg>'],
+['E','/i/','Egg','(huevo)','<svg width="32" height="32" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="4" y="1" width="4" height="1" fill="#ffffcc"/><rect x="3" y="2" width="6" height="1" fill="#ffffcc"/><rect x="2" y="3" width="8" height="6" fill="#ffffcc"/><rect x="3" y="9" width="6" height="1" fill="#ffffcc"/><rect x="4" y="10" width="4" height="1" fill="#ffffcc"/><rect x="4" y="5" width="4" height="3" fill="#ffcc00"/></svg>'],
+['F','/ef/','Fish','(pescado)','<svg width="32" height="32" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="2" y="4" width="2" height="4" fill="#6ab4ff"/><rect x="4" y="3" width="6" height="6" fill="#6ab4ff"/><rect x="10" y="2" width="2" height="3" fill="#4499ee"/><rect x="10" y="7" width="2" height="3" fill="#4499ee"/><rect x="5" y="5" width="1" height="1" fill="#fff"/></svg>'],
+['G','/yi/','Grape','(uva)','<svg width="32" height="32" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="5" y="0" width="2" height="2" fill="#8b4513"/><rect x="3" y="2" width="2" height="2" fill="#9944cc"/><rect x="7" y="2" width="2" height="2" fill="#9944cc"/><rect x="2" y="4" width="2" height="2" fill="#aa55dd"/><rect x="5" y="4" width="2" height="2" fill="#aa55dd"/><rect x="8" y="4" width="2" height="2" fill="#aa55dd"/><rect x="5" y="8" width="2" height="2" fill="#bb66ee"/></svg>'],
+['H','/eich/','Hat','(sombrero)','<svg width="32" height="32" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="0" y="8" width="12" height="2" fill="#3355aa"/><rect x="3" y="3" width="6" height="5" fill="#4466cc"/><rect x="4" y="2" width="4" height="1" fill="#5577dd"/><rect x="5" y="1" width="2" height="1" fill="#5577dd"/><rect x="3" y="7" width="1" height="2" fill="#ffdd00"/><rect x="8" y="7" width="1" height="2" fill="#ffdd00"/></svg>'],
+['I','/ai/','Ice','(hielo)','<svg width="32" height="32" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="3" y="0" width="6" height="1" fill="#88ccff"/><rect x="2" y="1" width="8" height="8" fill="#aaddff"/><rect x="1" y="3" width="10" height="4" fill="#bbeeFF"/><rect x="4" y="9" width="4" height="3" fill="#88aacc"/><rect x="3" y="4" width="6" height="2" fill="#ddeeff"/></svg>'],
+['J','/yei/','Jar','(tarro)','<svg width="32" height="32" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="3" y="1" width="6" height="1" fill="#ffaa00"/><rect x="4" y="0" width="4" height="1" fill="#ffaa00"/><rect x="2" y="2" width="8" height="9" fill="#ffcc44"/><rect x="3" y="3" width="6" height="7" fill="#ffdd66"/><rect x="3" y="8" width="6" height="1" fill="#ffaa00"/></svg>'],
+['K','/kei/','King','(rey)','<svg width="32" height="32" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="2" y="0" width="2" height="3" fill="#ffdd00"/><rect x="5" y="0" width="2" height="2" fill="#ffdd00"/><rect x="8" y="0" width="2" height="3" fill="#ffdd00"/><rect x="1" y="3" width="10" height="2" fill="#ffdd00"/><rect x="2" y="5" width="8" height="7" fill="#cc2222"/><rect x="4" y="7" width="4" height="5" fill="#aa1111"/></svg>'],
+['L','/el/','Lion','(leon)','<svg width="32" height="32" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="3" y="2" width="6" height="6" fill="#f5c89a"/><rect x="2" y="3" width="8" height="4" fill="#f5c89a"/><rect x="1" y="2" width="3" height="6" fill="#cc8833"/><rect x="8" y="2" width="3" height="6" fill="#cc8833"/><rect x="4" y="4" width="1" height="1" fill="#111"/><rect x="7" y="4" width="1" height="1" fill="#111"/><rect x="2" y="8" width="8" height="4" fill="#cc9944"/></svg>'],
+['M','/em/','Moon','(luna)','<svg width="32" height="32" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="4" y="1" width="5" height="1" fill="#ddddaa"/><rect x="2" y="2" width="6" height="1" fill="#ddddaa"/><rect x="1" y="3" width="6" height="6" fill="#ddddaa"/><rect x="2" y="9" width="6" height="1" fill="#ddddaa"/><rect x="4" y="10" width="4" height="1" fill="#ddddaa"/><rect x="5" y="3" width="3" height="6" fill="#000"/><rect x="6" y="2" width="3" height="7" fill="#000"/></svg>'],
+['N','/en/','Nest','(nido)','<svg width="32" height="32" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="1" y="7" width="10" height="4" fill="#8b5020"/><rect x="2" y="6" width="8" height="2" fill="#aa6633"/><rect x="4" y="4" width="4" height="3" fill="#aaddff"/><rect x="5" y="5" width="2" height="2" fill="#88ccff"/><rect x="2" y="8" width="2" height="1" fill="#aa7744"/><rect x="5" y="8" width="2" height="1" fill="#aa7744"/><rect x="8" y="8" width="2" height="1" fill="#aa7744"/></svg>'],
+['O','/ou/','Orange','(naranja)','<svg width="32" height="32" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="5" y="0" width="2" height="1" fill="#44aa44"/><rect x="3" y="2" width="6" height="1" fill="#ff8800"/><rect x="2" y="3" width="8" height="6" fill="#ff9922"/><rect x="1" y="4" width="10" height="4" fill="#ffaa33"/><rect x="3" y="9" width="6" height="2" fill="#ff8800"/><rect x="4" y="4" width="4" height="3" fill="#ffcc66"/></svg>'],
+['P','/pi/','Penguin','(pingüino)','<svg width="32" height="32" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="3" y="0" width="6" height="3" fill="#111"/><rect x="2" y="3" width="8" height="7" fill="#111"/><rect x="4" y="3" width="4" height="6" fill="#fff"/><rect x="3" y="2" width="2" height="2" fill="#111"/><rect x="7" y="2" width="2" height="2" fill="#111"/><rect x="4" y="3" width="1" height="1" fill="#fff"/><rect x="7" y="3" width="1" height="1" fill="#fff"/><rect x="5" y="6" width="2" height="1" fill="#ff8800"/><rect x="2" y="9" width="3" height="2" fill="#ff8800"/><rect x="7" y="9" width="3" height="2" fill="#ff8800"/></svg>'],
+['Q','/kiu/','Queen','(reina)','<svg width="32" height="32" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="2" y="0" width="2" height="2" fill="#ffdd00"/><rect x="5" y="0" width="2" height="1" fill="#ffdd00"/><rect x="8" y="0" width="2" height="2" fill="#ffdd00"/><rect x="1" y="2" width="10" height="2" fill="#ffdd00"/><rect x="2" y="4" width="8" height="7" fill="#aa66ff"/><rect x="4" y="6" width="4" height="5" fill="#8844dd"/></svg>'],
+['R','/ar/','Rose','(rosa)','<svg width="32" height="32" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="4" y="0" width="4" height="3" fill="#ee4444"/><rect x="3" y="1" width="6" height="4" fill="#ee4444"/><rect x="2" y="3" width="8" height="3" fill="#cc2222"/><rect x="5" y="2" width="2" height="2" fill="#ff6666"/><rect x="5" y="6" width="2" height="6" fill="#44aa44"/><rect x="3" y="8" width="2" height="1" fill="#44aa44"/><rect x="7" y="9" width="2" height="1" fill="#44aa44"/></svg>'],
+['S','/es/','Star','(estrella)','<svg width="32" height="32" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="5" y="0" width="2" height="2" fill="#ffdd00"/><rect x="0" y="4" width="12" height="2" fill="#ffdd00"/><rect x="2" y="6" width="8" height="2" fill="#ffdd00"/><rect x="3" y="8" width="2" height="3" fill="#ffdd00"/><rect x="7" y="8" width="2" height="3" fill="#ffdd00"/><rect x="4" y="5" width="4" height="2" fill="#ffaa00"/></svg>'],
+['T','/ti/','Tree','(árbol)','<svg width="32" height="32" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="5" y="9" width="2" height="3" fill="#8b4513"/><rect x="3" y="6" width="6" height="4" fill="#33aa33"/><rect x="2" y="4" width="8" height="4" fill="#44bb44"/><rect x="4" y="2" width="4" height="4" fill="#55cc55"/><rect x="5" y="0" width="2" height="3" fill="#66dd66"/></svg>'],
+['U','/iu/','Umbrella','(paraguas)','<svg width="32" height="32" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="1" y="4" width="10" height="4" fill="#4488ff"/><rect x="2" y="3" width="8" height="2" fill="#3377ee"/><rect x="4" y="2" width="4" height="2" fill="#2266dd"/><rect x="6" y="1" width="1" height="1" fill="#2266dd"/><rect x="6" y="7" width="1" height="4" fill="#4488ff"/><rect x="5" y="11" width="3" height="1" fill="#2266dd"/></svg>'],
+['V','/vi/','Van','(furgoneta)','<svg width="32" height="32" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="0" y="5" width="12" height="5" fill="#4488cc"/><rect x="1" y="3" width="7" height="3" fill="#3377bb"/><rect x="2" y="4" width="5" height="2" fill="#88ccff"/><rect x="2" y="9" width="2" height="2" fill="#555"/><rect x="8" y="9" width="2" height="2" fill="#555"/><rect x="0" y="7" width="1" height="1" fill="#ffdd00"/><rect x="11" y="7" width="1" height="1" fill="#ffdd00"/></svg>'],
+['W','/dóbol-iu/','World','(mundo)','<svg width="32" height="32" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="3" y="1" width="6" height="1" fill="#4488ff"/><rect x="2" y="2" width="8" height="8" fill="#4488ff"/><rect x="1" y="3" width="10" height="6" fill="#4488ff"/><rect x="3" y="3" width="3" height="3" fill="#44aa44"/><rect x="7" y="4" width="2" height="2" fill="#44aa44"/><rect x="4" y="7" width="4" height="2" fill="#44aa44"/></svg>'],
+['X','/eks/','X-ray','(rayos x)','<svg width="32" height="32" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="1" y="0" width="4" height="12" fill="#333"/><rect x="7" y="0" width="4" height="12" fill="#333"/><rect x="2" y="2" width="8" height="8" fill="#88ccff"/><rect x="4" y="4" width="1" height="4" fill="#fff"/><rect x="7" y="4" width="1" height="4" fill="#fff"/><rect x="4" y="6" width="4" height="1" fill="#fff"/></svg>'],
+['Y','/uai/','Yarn','(hilo)','<svg width="32" height="32" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="3" y="1" width="6" height="1" fill="#ff66aa"/><rect x="2" y="2" width="8" height="8" fill="#ff88bb"/><rect x="1" y="3" width="10" height="6" fill="#ff88bb"/><rect x="2" y="4" width="8" height="1" fill="#ee5599"/><rect x="3" y="7" width="6" height="1" fill="#ee5599"/><rect x="5" y="2" width="1" height="8" fill="#ee5599"/></svg>'],
+['Z','/si/','Zero','(cero)','<svg width="32" height="32" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges"><rect x="4" y="0" width="4" height="1" fill="#ffdd00"/><rect x="2" y="1" width="8" height="2" fill="#ffdd00"/><rect x="1" y="3" width="3" height="6" fill="#ffdd00"/><rect x="8" y="3" width="3" height="6" fill="#ffdd00"/><rect x="2" y="9" width="8" height="2" fill="#ffdd00"/><rect x="4" y="11" width="4" height="1" fill="#ffdd00"/></svg>'],
+];
+
+function d(name,svg,text){return `<div class="dlg"><div class="dlg-top"><div class="dlg-face">${svg}</div><div class="dlg-right"><div class="dlg-name">${name}</div><div class="dlg-text">${text}</div></div></div><div class="dlg-foot">▼</div></div>`;}
+function imgCard(px,en,es,pron){return `<div class="img-card">${PX[px]}<div class="ic-en">${en}</div><div class="ic-es">${es}</div><div class="ic-pron">${pron}</div></div>`;}
+
+const exState={};
+// Track which exercise blocks have at least one answered question
+const exProgress={};
+
+function mkEx(id,title,qs){
+  exProgress[id]=exProgress[id]||0;
+  const cards=qs.map((q,i)=>{
+    const btns=q.o.map((o,j)=>`<button class="exbtn" id="e${id}_${i}_${j}" onclick="doEx('${id}',${i},${j},${q.c})">${o}</button>`).join('');
+    return `<div class="ex-card"><div class="ex-q">${i+1}. ${q.q}</div><div class="ex-opts">${btns}</div><div class="ex-fb" id="ef${id}_${i}"></div></div>`;
+  }).join('');
+  return `<div class="exbox" id="exbox_${id}"><div class="ex-title">⚔ EXERCISE: ${title}</div>${cards}<div class="ex-score" id="es${id}">Answer all questions above</div></div>`;
+}
+
+function doEx(id,qi,ai,ci){
+  const btn=document.getElementById(`e${id}_${qi}_${ai}`);
+  if(!btn||btn.disabled)return;
+  for(let j=0;j<8;j++){const b=document.getElementById(`e${id}_${qi}_${j}`);if(b)b.disabled=true;}
+  if(!exState[id])exState[id]={};
+  const ok=ai===ci;
+  exState[id][qi]=ok;
+  btn.classList.add(ok?'ok':'no');
+  if(!ok){const cb=document.getElementById(`e${id}_${qi}_${ci}`);if(cb)cb.classList.add('ok');}
+  const fb=document.getElementById(`ef${id}_${qi}`);
+  if(fb){fb.style.color=ok?'var(--green)':'var(--red)';fb.textContent=ok?'✓ Correct!':'✗ Incorrect — see the correct answer in green';}
+  const sc=document.getElementById(`es${id}`);
+  if(sc){
+    const done=Object.keys(exState[id]).length;
+    const good=Object.values(exState[id]).filter(Boolean).length;
+    sc.textContent=`Score: ${good}/${done}`;
+    sc.style.color=good===done?'var(--green)':'var(--gold)';
+  }
+  // Update progress count for this exercise block
+  exProgress[id]=(exProgress[id]||0)+1;
+  if(!ST.exDone[ST.cur])ST.exDone[ST.cur]=[];
+  if(!ST.exDone[ST.cur].includes(id))ST.exDone[ST.cur].push(id);
+}
+
+// Check if enough exercises answered before boss
+function stageExercisesStarted(){
+  const done=ST.exDone[ST.cur]||[];
+  return done.length>0;
+}
+
+const STAGES=[
+  {id:'1-1',name:'The Alphabet Kingdom',xp:80,col:'#ff4444'},
+  {id:'1-2',name:'Vocabulary Village',xp:150,col:'#ffdd00'},
+  {id:'1-3',name:'Grammar Dungeon',xp:150,col:'#aa66ff'},
+  {id:'1-4',name:'Conversation Quest',xp:120,col:'#4dfa6a'},
+  {id:'1-5',name:'Numbers & Time Temple',xp:100,col:'#6ab4ff'},
+  {id:'1-6',name:'Pronunciation Powerup',xp:100,col:'#ff8844'},
+  {id:'1-7',name:'Reading & Writing Ruins',xp:100,col:'#ff66aa'},
+  {id:'1-8',name:'FINAL EXAM — Level 1',xp:200,col:'#ffdd00'},
+];
+
+const REWARDS=[
+  {t:'★ STAGE 1-1 CLEARED! ★',b:'+80 XP — Alphabet Warrior 🗡️',f:'LYRA: "You learned the alphabet, hero!"\n"All 26 letters are yours now."\n★ +80 XP earned!'},
+  {t:'★ STAGE 1-2 CLEARED! ★',b:'+150 XP — Vocabulary Hunter 📦',f:'ZACK: "200 words? You\'re basically bilingual!"\n★ +150 XP earned!'},
+  {t:'★ STAGE 1-3 CLEARED! ★',b:'+150 XP — Grammar Knight ⚔️',f:'CRUX: "NYEH HEH HEH! You defeated the Grammar Dungeon!"\n"Even I am impressed. NYEH."\n★ +150 XP earned!'},
+  {t:'★ STAGE 1-4 CLEARED! ★',b:'+120 XP — Conversation Hero 💬',f:'NOVA: "You can hold a real conversation! You did it!"\n★ +120 XP earned!'},
+  {t:'★ STAGE 1-5 CLEARED! ★',b:'+100 XP — Time Master ⏰',f:'Numbers now obey your voice.\nClocks no longer confuse you.\n★ +100 XP earned!'},
+  {t:'★ STAGE 1-6 CLEARED! ★',b:'+100 XP — Pronunciation Warrior 🔊',f:'NOVA: "The hardest pronunciation... conquered!"\n★ +100 XP earned!'},
+  {t:'★ STAGE 1-7 CLEARED! ★',b:'+100 XP — Story Weaver ✍️',f:'CRUX: "NYEH! Your sentences are POWERFUL now."\n★ +100 XP earned!'},
+  {t:'🏆 LEVEL 1 COMPLETE! 🏆',b:'🏅 ENGLISH APPRENTICE — 1000/1000 XP',f:'ALL STAGES CLEARED.\n"despite everything, it\'s still you."\n★ LEVEL 2 awaits, brave hero...'},
+];
+
+const FB_OK=['★ Critical hit! Excellent choice.','★ You survived! DETERMINATION +1.','★ LYRA: "Perfect. The force is with you."','★ Excellent! +25 XP bonus.','★ CRUX: "...Impressive. NYEH."','★ CORRECT! The boss loses HP.'];
+const FB_BAD=['✗ Critical mistake... but you learn.','✗ LYRA: "Try again. You can do it."','✗ Wrong answer — correct one shown in green.','✗ CRUX: "NYEH HEH HEH! Learn from this."','✗ Wrong path. The correct answer is shown.'];
+
+// ══════════ STAGE CONTENT ══════════
+function s1(){return `
+<div class="stage-bar">★ STAGE 1-1: THE ALPHABET KINGDOM ★</div>
+${d('LYRA — your guide',SVG.LYRA,'* Welcome, young hero. I am LYRA, guardian of the English Kingdom.<br>* These 26 letters are your first weapons. Master them and no word will stop you.')}
+${d('HERO',SVG.HERO,'* I am ready. Teach me everything.')}
+<div class="sec">// THE 26 WEAPONS — LETTER · PRONUNCIATION · EXAMPLE //</div>
+<div class="alpha-grid">${ALPHA.map(([l,s,word,tr,img])=>`
+<div class="alpha-card"><span class="al">${l}</span><span class="as">${s}</span>${img}<span class="alpha-word">${word}</span><span class="alpha-es">${tr}</span></div>`).join('')}</div>
+<div class="tbl-wrap"><div class="tbl-label">[ THE 5 VOWELS — LEGENDARY LETTERS ]</div>
+<table class="vt"><tr><th>LETTER</th><th>SOUNDS LIKE</th><th>EXAMPLE</th></tr>
+<tr><td class="ve">A</td><td class="vs">/ei/ — like "hey" without h</td><td class="vx">Apple, Amazing</td></tr>
+<tr><td class="ve">E</td><td class="vs">/i/ — like the "ee" in "bee"</td><td class="vx">Every, English</td></tr>
+<tr><td class="ve">I</td><td class="vs">/ai/ — like "eye"</td><td class="vx">Ice, Important</td></tr>
+<tr><td class="ve">O</td><td class="vs">/ou/ — like "oh"</td><td class="vx">Open, Object</td></tr>
+<tr><td class="ve">U</td><td class="vs">/iu/ — like "you"</td><td class="vx">Use, Under</td></tr>
+</table></div>
+<div class="path-box"><div class="path-label">★ CHOOSE YOUR PATH ★</div>
+<div class="path-btns">
+<button class="pbtn" onclick="choosePath(this,'courage')"><span class="picon">⚔️</span>PATH OF COURAGE<br><span style="color:var(--dim)">practice out loud</span></button>
+<button class="pbtn" onclick="choosePath(this,'wisdom')"><span class="picon">📖</span>PATH OF WISDOM<br><span style="color:var(--dim)">study and write</span></button>
+</div></div>
+<div id="path-result" class="sbox" style="display:none"></div>
+${mkEx('s1a','ALPHABET — ROUND 1',[
+  {q:'How is the letter <span style="color:var(--gold)">A</span> pronounced in English?',o:['Like Spanish "a"','Like "ei"','Like "o"','Like "e"'],c:1},
+  {q:'How is the letter <span style="color:var(--gold)">G</span> pronounced?',o:['Like Spanish "ge"','Like "ji"','Like "yi"','Like "gu"'],c:2},
+  {q:'How is the letter <span style="color:var(--gold)">H</span> pronounced?',o:['Like Spanish "jota"','Like "eich"','Like "ache"','Silent'],c:1},
+  {q:'How is the letter <span style="color:var(--gold)">W</span> pronounced?',o:['"uve"','"doble u"','"dóbol-iu"','"uve doble"'],c:2},
+])}
+${mkEx('s1b','ALPHABET — ROUND 2',[
+  {q:'How is <span style="color:var(--gold)">J</span> pronounced in English?',o:['"jota"','"ji"','"yei"','"je"'],c:2},
+  {q:'Which letter sounds like "ai"?',o:['A','E','I','O'],c:2},
+  {q:'How is the letter <span style="color:var(--gold)">Y</span> pronounced?',o:['"ya"','"ye"','"uai"','"yi"'],c:2},
+  {q:'How many vowels does English have?',o:['4','5','6','7'],c:1},
+  {q:'The letter <span style="color:var(--gold)">B</span> sounds like:',o:['"ve"','"bi"','"be"','"bo"'],c:1},
+])}
+${mkEx('s1c','ALPHABET — ROUND 3 (ADVANCED)',[
+  {q:'<span style="color:var(--gold)">Q</span> is pronounced:',o:['"ku"','"ke"','"kiu"','"qui"'],c:2},
+  {q:'<span style="color:var(--gold)">X</span> is pronounced:',o:['"equis"','"eks"','"iks"','"ix"'],c:1},
+  {q:'Which letter is NOT a vowel?',o:['A','E','B','I'],c:2},
+  {q:'<span style="color:var(--gold)">Z</span> is pronounced (in American English):',o:['"zeta"','"ze"','"si"','"zi"'],c:3},
+])}
+<div class="sec">// BOSS BATTLE //</div>
+<div class="battle"><div class="battle-top">★ MINI BOSS: LETTER CONFUSION ★</div>
+<div class="battle-body"><div class="boss-img">${BOSS.B1}</div>
+<div class="hp-row"><span class="hp-lbl">ENEMY HP</span><div class="hp-bg"><div class="hp-fill hp-e" id="bh1" style="width:100%"></div></div><span class="hp-val" id="bhv1">50/50</span></div>
+<div class="hp-row"><span class="hp-lbl">YOUR HP</span><div class="hp-bg"><div class="hp-fill hp-p" style="width:100%"></div></div><span class="hp-val">20/20</span></div>
+<div class="btxt" id="bt1"><span class="by">LYRA:</span> "The LETTER CONFUSION scrambles your words! Read this carefully:"<br><br><span class="bb">"My  Alex name  is  appel  Everyday  I  breakfist an  eats  for."</span><br><br><span class="bp">Which one is the correct answer?</span></div>
+<div class="choices" id="bc1">
+  <button class="cbtn" onclick="doBattle(1,'w',this)"><span class="cl">A)</span>  My neim is Alex. Every day I eat an appel for breakfast.</button>
+  <button class="cbtn" onclick="doBattle(1,'c',this)"><span class="cl">B)</span>  My name is Alex. Every day I eat an apple for breakfast.</button>
+  <button class="cbtn" onclick="doBattle(1,'w',this)"><span class="cl">C)</span>  My name is Alex. Every day I eats an apple for brekfast.</button>
+  <button class="cbtn" onclick="doBattle(1,'w',this)"><span class="cl">D)</span>  My name is Alex. Everyday I eat an Aple for Breakfast.</button>
+</div>
+<div class="boss-fail-area" id="bfa1"><div class="boss-fail-txt">✗ DEFEATED... but heroes always rise again.<br>Return to World Map and practice more.</div>
+<button class="btn-restart" onclick="goMap()">↺ RESTART — WORLD MAP</button></div>
+</div></div>
+<div class="mission"><div class="mission-head">★ DAILY QUEST — STAGE 1-1 ★</div>
+<div class="mission-body">
+<div class="mission-li">Write the alphabet 3 times out loud today</div>
+<div class="mission-li">Find 5 objects at home and spell them in English</div>
+<div class="mission-li">Practice the vowels (ei, i, ai, ou, iu) for 5 minutes</div>
+</div></div>`;}
+
+function s2(){return `
+<div class="stage-bar">★ STAGE 1-2: VOCABULARY VILLAGE ★</div>
+${d('ZACK — the merchant',SVG.ZACK,'* Hey! Welcome to VOCABULARY VILLAGE! I\'m ZACK.<br>* Everything here is free for heroes. Take all the words you need!')}
+<div class="sec">// EVERYDAY OBJECTS //</div>
+<div class="tbl-label" style="margin-bottom:8px">[ THINGS AROUND YOU ]</div>
+<div class="img-row">
+${imgCard('house','house','casa','jaus')}${imgCard('cat','cat','gato','kat')}${imgCard('dog','dog','perro','dog')}${imgCard('book','book','libro','buk')}${imgCard('water','water','agua','uóter')}${imgCard('food','food','comida','fud')}${imgCard('phone','phone','celular','foun')}${imgCard('car','car','carro','kar')}
+</div>
+<div class="tbl-label" style="margin-bottom:8px;margin-top:4px">[ NATURE & WORLD ]</div>
+<div class="img-row">
+${imgCard('tree','tree','plant','tri')}${imgCard('sun','sun','sol','san')}${imgCard('moon','moon','luna','mun')}${imgCard('fire','fire','fuego','fáier')}${imgCard('apple','apple','manzana','ápol')}${imgCard('music','music','músic','miúsik')}${imgCard('star','star','estrella','star')}${imgCard('city','city','ciudad','síti')}
+</div>
+<div class="tbl-wrap"><div class="tbl-label">[ ESSENTIAL VERBS ]</div>
+<table class="vt"><tr><th>ENGLISH</th><th>MEANING</th><th>PRONUNCIATION</th><th>EXAMPLE</th></tr>
+<tr><td class="ve">to be</td><td class="vs">to exist / be</td><td class="vp">tu bi</td><td class="vx">I am happy.</td></tr>
+<tr><td class="ve">to have</td><td class="vs">to possess</td><td class="vp">tu jav</td><td class="vx">I have a cat.</td></tr>
+<tr><td class="ve">to go</td><td class="vs">to move</td><td class="vp">tu gou</td><td class="vx">I go to work.</td></tr>
+<tr><td class="ve">to want</td><td class="vs">to desire</td><td class="vp">tu uont</td><td class="vx">I want water.</td></tr>
+<tr><td class="ve">to eat</td><td class="vs">to consume food</td><td class="vp">tu it</td><td class="vx">We eat at 7pm.</td></tr>
+<tr><td class="ve">to speak</td><td class="vs">to talk</td><td class="vp">tu spik</td><td class="vx">I speak English!</td></tr>
+<tr><td class="ve">to like</td><td class="vs">to enjoy</td><td class="vp">tu laik</td><td class="vx">I like pizza.</td></tr>
+<tr><td class="ve">to need</td><td class="vs">to require</td><td class="vp">tu nid</td><td class="vx">I need help.</td></tr>
+<tr><td class="ve">to work</td><td class="vs">to labor</td><td class="vp">tu uork</td><td class="vx">She works hard.</td></tr>
+<tr><td class="ve">to live</td><td class="vs">to reside</td><td class="vp">tu liv</td><td class="vx">I live in Lima.</td></tr>
+</table></div>
+<div class="tbl-wrap"><div class="tbl-label">[ POWER WORDS — DAILY USE ]</div>
+<table class="vt"><tr><th>ENGLISH</th><th>MEANING</th><th>PRONUNCIATION</th><th>EXAMPLE</th></tr>
+<tr><td class="ve">yes / no</td><td class="vs">affirmation / negation</td><td class="vp">yes / nou</td><td class="vx">Yes! / No, thanks.</td></tr>
+<tr><td class="ve">please</td><td class="vs">polite request</td><td class="vp">plís</td><td class="vx">Water, please.</td></tr>
+<tr><td class="ve">thank you</td><td class="vs">gratitude</td><td class="vp">zank iú</td><td class="vx">Thank you very much!</td></tr>
+<tr><td class="ve">sorry</td><td class="vs">apology</td><td class="vp">sori</td><td class="vx">Sorry, I don't understand.</td></tr>
+<tr><td class="ve">hello / bye</td><td class="vs">greeting / farewell</td><td class="vp">jelou / bai</td><td class="vx">Hello! Goodbye!</td></tr>
+<tr><td class="ve">today / tomorrow</td><td class="vs">now / next day</td><td class="vp">tudei / tumórou</td><td class="vx">See you tomorrow!</td></tr>
+<tr><td class="ve">of course!</td><td class="vs">certainly</td><td class="vp">of cors</td><td class="vx">Of course I can!</td></tr>
+<tr><td class="ve">I don't know</td><td class="vs">no idea</td><td class="vp">ai dount nou</td><td class="vx">I don't know. Sorry.</td></tr>
+</table></div>
+${mkEx('s2a','VOCABULARY — ROUND 1',[
+  {q:'A dog says "woof". A ___ says "meow":',o:['bird','fish','cat','horse'],c:2},
+  {q:'"I ___ a new car." — which verb fits?',o:['eat','want','live','speak'],c:1},
+  {q:'You are thirsty. You drink ___:',o:['fire','music','book','water'],c:3},
+  {q:'You are at a restaurant. You say "A coffee, ___":',o:['sorry','hello','please','thank you'],c:2},
+  {q:'Complete: "I ___ three languages."',o:['eat','speak','live','go'],c:1},
+])}
+${mkEx('s2b','VOCABULARY — ROUND 2',[
+  {q:'You read pages. You read a ___:',o:['phone','car','book','star'],c:2},
+  {q:'Someone helps you. You say "___":',o:['sorry','please','hello','thank you'],c:3},
+  {q:'Maria is in Lima. She ___ in Lima:',o:['eats','works','lives','speaks'],c:2},
+  {q:'Today is Monday. ___ is Tuesday:',o:['yesterday','tonight','tomorrow','morning'],c:2},
+  {q:'Many buildings, many people, many streets. That is a ___:',o:['tree','moon','star','city'],c:3},
+])}
+${mkEx('s2c','VOCABULARY — ROUND 3',[
+  {q:'"Are you sure?" — "Yes, ___ ___!" (2 words):',o:['of course','please yes','I know','sorry not'],c:0},
+  {q:'It\'s 1pm. Your stomach is making noises. You need to ___:',o:['sleep','work','eat','speak'],c:2},
+  {q:'Your phone broke. You say: "I ___ a new phone":',o:['like','go','speak','need'],c:3},
+  {q:'You hear a guitar, a piano, a drum. That is ___:',o:['food','fire','music','water'],c:2},
+])}
+<div class="sec">// BOSS BATTLE //</div>
+<div class="battle"><div class="battle-top">★ BOSS: THE VERB MONSTER ★</div>
+<div class="battle-body"><div class="boss-img">${BOSS.B2}</div>
+<div class="hp-row"><span class="hp-lbl">ENEMY HP</span><div class="hp-bg"><div class="hp-fill hp-e" id="bh2" style="width:100%"></div></div><span class="hp-val" id="bhv2">80/80</span></div>
+<div class="hp-row"><span class="hp-lbl">YOUR HP</span><div class="hp-bg"><div class="hp-fill hp-p" style="width:100%"></div></div><span class="hp-val">20/20</span></div>
+<div class="btxt" id="bt2"><span class="by">ZACK:</span> "The Verb Monster attacks with a DOUBLE challenge!"<br><br><span class="bb">Complete BOTH gaps: "I ___ a student and I ___ English every day."</span><br><br><span class="bp">Choose the only fully correct sentence:</span></div>
+<div class="choices" id="bc2">
+  <button class="cbtn" onclick="doBattle(2,'w',this)"><span class="cl">A)</span> I am a student and I speaks English every day.</button>
+  <button class="cbtn" onclick="doBattle(2,'w',this)"><span class="cl">B)</span> I is a student and I speak English every day.</button>
+  <button class="cbtn" onclick="doBattle(2,'c',this)"><span class="cl">C)</span> I am a student and I speak English every day.</button>
+  <button class="cbtn" onclick="doBattle(2,'w',this)"><span class="cl">D)</span> I are a student and I speaking English every day.</button>
+</div>
+<div class="boss-fail-area" id="bfa2"><div class="boss-fail-txt">✗ DEFEATED... but heroes always rise again.<br>Return to World Map and practice more.</div>
+<button class="btn-restart" onclick="goMap()">↺ RESTART — WORLD MAP</button></div>
+</div></div>`;}
+
+function s3(){return `
+<div class="stage-bar">★ STAGE 1-3: GRAMMAR DUNGEON ★</div>
+${d('CRUX — grammar knight',SVG.CRUX,'* NYEH HEH HEH! Many heroes fall here in the Grammar Dungeon!<br>* But you... I see determination in your eyes. I will teach you. NYEH!')}
+<div class="tbl-wrap"><div class="tbl-label">[ WEAPON: SUBJECT PRONOUNS ]</div>
+<table class="vt"><tr><th>ENGLISH</th><th>MEANING</th><th>PRONUNCIATION</th><th>EXAMPLE</th></tr>
+<tr><td class="ve">I</td><td class="vs">myself</td><td class="vp">ai</td><td class="vx">I am a student.</td></tr>
+<tr><td class="ve">You</td><td class="vs">the person I talk to</td><td class="vp">iu</td><td class="vx">You are my friend.</td></tr>
+<tr><td class="ve">He</td><td class="vs">a male person</td><td class="vp">ji</td><td class="vx">He is my brother.</td></tr>
+<tr><td class="ve">She</td><td class="vs">a female person</td><td class="vp">shi</td><td class="vx">She is a doctor.</td></tr>
+<tr><td class="ve">It</td><td class="vs">a thing or animal</td><td class="vp">it</td><td class="vx">It is a big dog.</td></tr>
+<tr><td class="ve">We</td><td class="vs">me and others</td><td class="vp">ui</td><td class="vx">We are from Peru.</td></tr>
+<tr><td class="ve">They</td><td class="vs">other people / things</td><td class="vp">dei</td><td class="vx">They are heroes.</td></tr>
+</table></div>
+<div class="tbl-wrap"><div class="tbl-label">[ SKILL: VERB "TO BE" — FULL CONJUGATION ]</div>
+<table class="vt"><tr><th>PRONOUN</th><th>VERB</th><th>NEGATIVE</th><th>EXAMPLE</th></tr>
+<tr><td class="ve">I</td><td class="vs" style="color:var(--gold)">AM</td><td class="vx">I am NOT</td><td class="vx">I am happy.</td></tr>
+<tr><td class="ve">You</td><td class="vs" style="color:var(--gold)">ARE</td><td class="vx">You are NOT</td><td class="vx">You are brave.</td></tr>
+<tr><td class="ve">He / She / It</td><td class="vs" style="color:var(--gold)">IS</td><td class="vx">She is NOT</td><td class="vx">She is smart.</td></tr>
+<tr><td class="ve">We</td><td class="vs" style="color:var(--gold)">ARE</td><td class="vx">We are NOT</td><td class="vx">We are a team.</td></tr>
+<tr><td class="ve">They</td><td class="vs" style="color:var(--gold)">ARE</td><td class="vx">They are NOT</td><td class="vx">They are heroes.</td></tr>
+</table></div>
+<div class="sbox"><span style="color:var(--gold)">★ TRICK TO REMEMBER:</span><br><br>
+<span style="color:var(--green)">AM</span> = only with <span style="color:var(--blue)">I</span><br>
+<span style="color:var(--green)">IS</span> = only with <span style="color:var(--blue)">He / She / It</span><br>
+<span style="color:var(--green)">ARE</span> = with <span style="color:var(--blue)">You / We / They</span><br><br>
+<span style="color:var(--dim);font-size:5px">* CRUX: "Memorize this and no boss will ever beat you." *</span></div>
+${mkEx('s3a','GRAMMAR — ROUND 1',[
+  {q:'"She ___ a doctor." — which is correct?',o:['am','are','is','be'],c:2},
+  {q:'"We ___ from Lima." — which is correct?',o:['am','are','is','were'],c:1},
+  {q:'"I ___ happy." — which is correct?',o:['am','are','is','be'],c:0},
+  {q:'"They ___ my friends." — which is correct?',o:['am','are','is','was'],c:1},
+  {q:'Negative form of "He is smart":',o:['He not smart','He aren\'t smart','He is not smart','He am not smart'],c:2},
+])}
+${mkEx('s3b','GRAMMAR — ROUND 2',[
+  {q:'"___ am from Peru." — which pronoun?',o:['You','He','I','She'],c:2},
+  {q:'"You ___ my friend." — which is correct?',o:['am','is','are','be'],c:2},
+  {q:'Question form of "She is happy":',o:['She is happy?','Is she happy?','Are she happy?','She am happy?'],c:1},
+  {q:'"It ___ a big dog." — which is correct?',o:['am','are','is','be'],c:2},
+  {q:'Contraction of "I am":',o:['I\'m','I\'s','I\'re','Im'],c:0},
+])}
+<div class="sec">// BOSS BATTLE //</div>
+<div class="battle"><div class="battle-top">★ FINAL BOSS: THE VERB "TO BE" ★</div>
+<div class="battle-body"><div class="boss-img">${BOSS.B3}</div>
+<div class="hp-row"><span class="hp-lbl">BOSS HP</span><div class="hp-bg"><div class="hp-fill hp-e" id="bh3" style="width:100%"></div></div><span class="hp-val" id="bhv3">100/100</span></div>
+<div class="hp-row"><span class="hp-lbl">YOUR HP</span><div class="hp-bg"><div class="hp-fill hp-p" style="width:100%"></div></div><span class="hp-val">20/20</span></div>
+<div class="btxt" id="bt3"><span class="br">THE VERB "TO BE"</span> rises before you with a TRIPLE attack!<br><br><span class="bb">Find the ONLY fully correct paragraph:</span><br><span style="color:var(--dim);font-size:5px">All 3 verbs must be correct.</span></div>
+<div class="choices" id="bc3">
+  <button class="cbtn" onclick="doBattle(3,'w',this)"><span class="cl">A)</span> She am a doctor. We is her patients. They are very sick.</button>
+  <button class="cbtn" onclick="doBattle(3,'w',this)"><span class="cl">B)</span> She is a doctor. We are her patients. They is very sick.</button>
+  <button class="cbtn" onclick="doBattle(3,'c',this)"><span class="cl">C)</span> She is a doctor. We are her patients. They are very sick.</button>
+  <button class="cbtn" onclick="doBattle(3,'w',this)"><span class="cl">D)</span> She are a doctor. We am her patients. They are very sick.</button>
+</div>
+<div class="boss-fail-area" id="bfa3"><div class="boss-fail-txt">✗ DEFEATED... but heroes always rise again.<br>Return to World Map and practice more.</div>
+<button class="btn-restart" onclick="goMap()">↺ RESTART — WORLD MAP</button></div>
+</div></div>`;}
+
+function s4(){return `
+<div class="stage-bar">★ STAGE 1-4: CONVERSATION QUEST ★</div>
+${d('NOVA — the adventurer',SVG.NOVA,'* Hey! I\'m NOVA. I\'ve spoken with people in 12 countries using only English.<br>* You can too. Let\'s practice real conversations!')}
+<div class="tbl-wrap"><div class="tbl-label">[ GREETINGS QUEST ]</div>
+<table class="vt"><tr><th>SITUATION</th><th>ENGLISH</th><th>PRONUNCIATION</th><th>MEANING</th></tr>
+<tr><td class="ve">Morning</td><td class="vs">Good morning!</td><td class="vp">gud mórning</td><td class="vx">Start of the day</td></tr>
+<tr><td class="ve">Afternoon</td><td class="vs">Good afternoon!</td><td class="vp">gud afternoon</td><td class="vx">Midday onwards</td></tr>
+<tr><td class="ve">Evening</td><td class="vs">Good evening!</td><td class="vp">gud ívning</td><td class="vx">Late afternoon / night</td></tr>
+<tr><td class="ve">How are you?</td><td class="vs">How are you?</td><td class="vp">jáu ar iu</td><td class="vx">Asking someone's state</td></tr>
+<tr><td class="ve">I'm fine!</td><td class="vs">I'm fine, thanks!</td><td class="vp">aim fain zanks</td><td class="vx">Positive reply</td></tr>
+<tr><td class="ve">Nice to meet you</td><td class="vs">Nice to meet you!</td><td class="vp">nais tu mit iu</td><td class="vx">First time meeting</td></tr>
+<tr><td class="ve">What's your name?</td><td class="vs">What's your name?</td><td class="vp">uots ior neim</td><td class="vx">Asking for a name</td></tr>
+<tr><td class="ve">My name is...</td><td class="vs">My name is...</td><td class="vp">mai neim is</td><td class="vx">Introducing yourself</td></tr>
+</table></div>
+<div class="sbox"><span style="color:var(--gold)">★ FULL CONVERSATION — PRACTICE THIS:</span><br><br>
+<span style="color:var(--dim)">NPC:</span> <span style="color:var(--blue)">"Hello! How are you?"</span><br>
+<span style="color:var(--dim)">YOU:</span> <span style="color:var(--green)">"I'm fine, thank you! And you?"</span><br><br>
+<span style="color:var(--dim)">NPC:</span> <span style="color:var(--blue)">"I'm great! What's your name?"</span><br>
+<span style="color:var(--dim)">YOU:</span> <span style="color:var(--green)">"My name is [YOUR NAME]. Nice to meet you!"</span><br><br>
+<span style="color:var(--dim)">NPC:</span> <span style="color:var(--blue)">"Nice to meet you too! Where are you from?"</span><br>
+<span style="color:var(--dim)">YOU:</span> <span style="color:var(--green)">"I'm from Peru. And you?"</span></div>
+${mkEx('s4a','CONVERSATION — ROUND 1',[
+  {q:'You meet someone new. You want to know their name. You ask:',o:['Where are you?','What\'s your name?','How are you?','Are you okay?'],c:1},
+  {q:'Someone asks "How are you?" You feel great. You reply:',o:['I am Peru.','Not bad, I guess.','I\'m fine, thanks!','Hello there.'],c:2},
+  {q:'You shake hands with a new person. You say:',o:['Goodbye!','See you later!','Nice to meet you!','I am here.'],c:2},
+  {q:'It\'s 8am. You walk into the office. You say:',o:['Good night!','Good afternoon!','Good evening!','Good morning!'],c:3},
+])}
+${mkEx('s4b','CONVERSATION — ROUND 2',[
+  {q:'A tourist asks you: "Where are you from?" You were born in Lima. You say:',o:['I am good.','I am 25.','I\'m from Peru.','I live work.'],c:2},
+  {q:'Your name is Carlos. How do you introduce yourself?',o:['I am Carlos name.','My name is Carlos.','Name me Carlos.','Carlos I am here.'],c:1},
+  {q:'Someone says "Nice to meet you!" You reply:',o:['Thank you for coming!','Nice to meet you too!','Goodbye!','I am fine!'],c:1},
+  {q:'It\'s 7pm. You enter a dinner party. You say:',o:['Good morning!','Good afternoon!','Good evening!','Good night!'],c:2},
+])}
+<div class="sec">// BOSS BATTLE //</div>
+<div class="battle"><div class="battle-top">★ BOSS: THE AWKWARD SILENCE ★</div>
+<div class="battle-body"><div class="boss-img">${BOSS.B4}</div>
+<div class="hp-row"><span class="hp-lbl">BOSS HP</span><div class="hp-bg"><div class="hp-fill hp-e" id="bh4" style="width:100%"></div></div><span class="hp-val" id="bhv4">60/60</span></div>
+<div class="hp-row"><span class="hp-lbl">YOUR HP</span><div class="hp-bg"><div class="hp-fill hp-p" style="width:100%"></div></div><span class="hp-val">20/20</span></div>
+<div class="btxt" id="bt4"><span class="by">STRANGER AT THE AIRPORT:</span><br><span class="bb">"Hi! Good morning! My name is Sarah. What's your name and where are you from?"</span><br><br><span style="color:var(--dim)">THE AWKWARD SILENCE closes in. You must reply with a COMPLETE answer!</span></div>
+<div class="choices" id="bc4">
+  <button class="cbtn" onclick="doBattle(4,'w',this)"><span class="cl">A)</span> I fine. Name me Carlos. Peru I from.</button>
+  <button class="cbtn" onclick="doBattle(4,'w',this)"><span class="cl">B)</span> Good morning Sarah! I am Carlos, I am from Peru. Nice to meeting you!</button>
+  <button class="cbtn" onclick="doBattle(4,'c',this)"><span class="cl">C)</span> Good morning! My name is Carlos and I'm from Peru. Nice to meet you!</button>
+  <button class="cbtn" onclick="doBattle(4,'w',this)"><span class="cl">D)</span> Hello yes. Carlos is my. Peru place I live in.</button>
+</div>
+<div class="boss-fail-area" id="bfa4"><div class="boss-fail-txt">✗ DEFEATED... but heroes always rise again.<br>Return to World Map and practice more.</div>
+<button class="btn-restart" onclick="goMap()">↺ RESTART — WORLD MAP</button></div>
+</div></div>
+<div class="mission"><div class="mission-head">★ DAILY QUEST — STAGE 1-4 ★</div>
+<div class="mission-body">
+<div class="mission-li">Practice this full dialogue 3 times out loud</div>
+<div class="mission-li">Say "Good morning!" to someone tomorrow</div>
+<div class="mission-li">Write 3 sentences introducing yourself in English</div>
+</div></div>`;}
+
+function s5(){return `
+<div class="stage-bar">★ STAGE 1-5: NUMBERS & TIME TEMPLE ★</div>
+${d('LYRA',SVG.LYRA,'* Numbers are the universal language, young hero.<br>* Master them in English and you can navigate any store, any clock, any world.')}
+<div class="tbl-wrap"><div class="tbl-label">[ NUMBERS 1–100 ]</div>
+<table class="vt"><tr><th>ENGLISH</th><th>#</th><th>PRON.</th><th>ENGLISH</th><th>#</th><th>PRON.</th></tr>
+<tr><td class="ve">one</td><td class="vs">1</td><td class="vp">uan</td><td class="ve">eleven</td><td class="vs">11</td><td class="vp">iléven</td></tr>
+<tr><td class="ve">two</td><td class="vs">2</td><td class="vp">tu</td><td class="ve">twelve</td><td class="vs">12</td><td class="vp">tuélv</td></tr>
+<tr><td class="ve">three</td><td class="vs">3</td><td class="vp">zri</td><td class="ve">thirteen</td><td class="vs">13</td><td class="vp">zertín</td></tr>
+<tr><td class="ve">four</td><td class="vs">4</td><td class="vp">for</td><td class="ve">twenty</td><td class="vs">20</td><td class="vp">tuénti</td></tr>
+<tr><td class="ve">five</td><td class="vs">5</td><td class="vp">faiv</td><td class="ve">thirty</td><td class="vs">30</td><td class="vp">zárti</td></tr>
+<tr><td class="ve">six</td><td class="vs">6</td><td class="vp">siks</td><td class="ve">forty</td><td class="vs">40</td><td class="vp">fórti</td></tr>
+<tr><td class="ve">seven</td><td class="vs">7</td><td class="vp">séven</td><td class="ve">fifty</td><td class="vs">50</td><td class="vp">fifti</td></tr>
+<tr><td class="ve">eight</td><td class="vs">8</td><td class="vp">eit</td><td class="ve">one hundred</td><td class="vs">100</td><td class="vp">uan jándred</td></tr>
+<tr><td class="ve">nine</td><td class="vs">9</td><td class="vp">nain</td><td class="ve">one thousand</td><td class="vs">1000</td><td class="vp">uan záuzend</td></tr>
+<tr><td class="ve">ten</td><td class="vs">10</td><td class="vp">ten</td><td class="ve">one million</td><td class="vs">1,000,000</td><td class="vp">uan mílion</td></tr>
+</table></div>
+<div class="tbl-wrap"><div class="tbl-label">[ TELLING THE TIME ]</div>
+<table class="vt"><tr><th>ENGLISH</th><th>PRONUNCIATION</th><th>MEANING</th></tr>
+<tr><td class="ve">What time is it?</td><td class="vp">uot taim is it</td><td class="vs">Asking for the time</td></tr>
+<tr><td class="ve">It's 3 o'clock.</td><td class="vp">its zri o-klok</td><td class="vs">Exactly 3:00</td></tr>
+<tr><td class="ve">It's half past 3.</td><td class="vp">its jaf past zri</td><td class="vs">3:30</td></tr>
+<tr><td class="ve">It's quarter to 4.</td><td class="vp">its kuórter tu for</td><td class="vs">3:45</td></tr>
+<tr><td class="ve">7 AM / 3 PM</td><td class="vp">séven ei-em / zri pi-em</td><td class="vs">Morning / Afternoon</td></tr>
+</table></div>
+${mkEx('s5a','NUMBERS — ROUND 1',[
+  {q:'How do you say 15 in English?',o:['fifthteen','fiveteen','fifteen','fifeteen'],c:2},
+  {q:'How do you ask for the time?',o:['What time is it?','How is the time?','When is the hour?','What hour it is?'],c:0},
+  {q:'"It\'s 3 o\'clock" means:',o:['3:30','3:45','3:00 exactly','3:15'],c:2},
+  {q:'How do you say 100?',o:['one thousand','one hundred','ten ten','one million'],c:1},
+])}
+${mkEx('s5b','NUMBERS — ROUND 2',[
+  {q:'How do you say 8?',o:['seven','nine','eight','six'],c:2},
+  {q:'"twenty-five" is the number:',o:['15','25','52','35'],c:1},
+  {q:'"It\'s half past 7" means:',o:['7:00','7:15','7:30','7:45'],c:2},
+  {q:'How do you say 1000?',o:['one hundred','one million','one thousand','ten hundred'],c:2},
+  {q:'"thirty" is the number:',o:['13','30','3','300'],c:1},
+])}
+<div class="sec">// BOSS BATTLE //</div>
+<div class="battle"><div class="battle-top">★ BOSS: THE CLOCK DEMON ★</div>
+<div class="battle-body"><div class="boss-img">${BOSS.B5}</div>
+<div class="hp-row"><span class="hp-lbl">BOSS HP</span><div class="hp-bg"><div class="hp-fill hp-e" id="bh5" style="width:100%"></div></div><span class="hp-val" id="bhv5">70/70</span></div>
+<div class="hp-row"><span class="hp-lbl">YOUR HP</span><div class="hp-bg"><div class="hp-fill hp-p" style="width:100%"></div></div><span class="hp-val">20/20</span></div>
+<div class="btxt" id="bt5"><span class="br">CLOCK DEMON</span> attacks with a time AND number combo!<br><br><span class="bb">"It's ___ past ___. I have ___ minutes before my meeting at 3 o'clock."</span><br><br><span style="color:var(--dim)">It is currently 2:30pm. Fill in: half / two / thirty.</span><br>Which option is 100% correct?</div>
+<div class="choices" id="bc5">
+  <button class="cbtn" onclick="doBattle(5,'w',this)"><span class="cl">A)</span> It's half past three. I have thirty minutes before my meeting at 3 o'clock.</button>
+  <button class="cbtn" onclick="doBattle(5,'w',this)"><span class="cl">B)</span> It's half past two. I have thirty minutes before my meeting at 2 o'clock.</button>
+  <button class="cbtn" onclick="doBattle(5,'c',this)"><span class="cl">C)</span> It's half past two. I have thirty minutes before my meeting at 3 o'clock.</button>
+  <button class="cbtn" onclick="doBattle(5,'w',this)"><span class="cl">D)</span> It's half past two. I have thirteen minutes before my meeting at 3 o'clock.</button>
+</div>
+<div class="boss-fail-area" id="bfa5"><div class="boss-fail-txt">✗ DEFEATED... but heroes always rise again.<br>Return to World Map and practice more.</div>
+<button class="btn-restart" onclick="goMap()">↺ RESTART — WORLD MAP</button></div>
+</div></div>`;}
+
+function s6(){return `
+<div class="stage-bar">★ STAGE 1-6: PRONUNCIATION POWERUP ★</div>
+${d('NOVA',SVG.NOVA,'* The final barrier between you and native speakers: PRONUNCIATION.<br>* Don\'t worry. I sounded terrible at first too. Practice makes power!')}
+<div class="tbl-wrap"><div class="tbl-label">[ COMMON PRONUNCIATION TRAPS ]</div>
+<table class="vt"><tr><th>WORD</th><th>❌ WRONG (common)</th><th>✓ CORRECT</th><th>TIP</th></tr>
+<tr><td class="ve">this / that</td><td class="vs">dis / dat</td><td class="vx">th+is / th+at</td><td class="vx">Tongue between teeth!</td></tr>
+<tr><td class="ve">very</td><td class="vs">bery</td><td class="vx">VVVery (V, not B)</td><td class="vx">Upper teeth on lower lip</td></tr>
+<tr><td class="ve">world</td><td class="vs">wor-led</td><td class="vx">wurld (1 syllable!)</td><td class="vx">Say it all together</td></tr>
+<tr><td class="ve">water</td><td class="vs">uáter</td><td class="vx">uóter (US: uárer)</td><td class="vx">In US English the "t" softens like "r"</td></tr>
+<tr><td class="ve">people</td><td class="vs">pe-o-ple</td><td class="vx">PEE-pul (2 syllables)</td><td class="vx">Not 3 syllables!</td></tr>
+<tr><td class="ve">beach</td><td class="vs">short i</td><td class="vx">biiich (long ee)</td><td class="vx">Very important difference!</td></tr>
+<tr><td class="ve">chicken</td><td class="vs">chiquen</td><td class="vx">CHIKen</td><td class="vx">ck sounds like K</td></tr>
+</table></div>
+<div class="sbox"><span style="color:var(--gold)">★ THE "TH" SOUND — FINAL PRONUNCIATION BOSS:</span><br><br>
+<span style="color:var(--dim)">Step 1:</span> <span style="color:#fff">Place your tongue gently between your teeth</span><br>
+<span style="color:var(--dim)">Step 2:</span> <span style="color:#fff">Blow air softly through</span><br>
+<span style="color:var(--dim)">Step 3:</span> <span style="color:#fff">WITH voice → "the", "this", "that", "they"</span><br>
+<span style="color:var(--dim)">Step 4:</span> <span style="color:#fff">WITHOUT voice → "think", "three", "thanks"</span><br><br>
+<span style="color:var(--green);font-size:5px">* practice in front of a mirror every day *</span></div>
+<div class="tbl-wrap"><div class="tbl-label">[ SILENT LETTERS — THE SECRET OF ENGLISH ]</div>
+<table class="vt"><tr><th>WORD</th><th>SILENT LETTER</th><th>PRONUNCIATION</th><th>MEANING</th></tr>
+<tr><td class="ve">knight</td><td class="vs">K and GH</td><td class="vp">nait</td><td class="vx">armored warrior</td></tr>
+<tr><td class="ve">know</td><td class="vs">K</td><td class="vp">nou</td><td class="vx">to be aware of</td></tr>
+<tr><td class="ve">write</td><td class="vs">W</td><td class="vp">rait</td><td class="vx">to put words on paper</td></tr>
+<tr><td class="ve">hour</td><td class="vs">H</td><td class="vp">áuer</td><td class="vx">60 minutes</td></tr>
+<tr><td class="ve">honest</td><td class="vs">H</td><td class="vp">ónest</td><td class="vx">truthful</td></tr>
+</table></div>
+${mkEx('s6a','PRONUNCIATION — ROUND 1',[
+  {q:'Which is the correct pronunciation of "water"?',o:['uáter','uóter','uáder','uóder'],c:1},
+  {q:'In "knight", which letters are silent?',o:['N and T','K and GH','K and N','GH and T'],c:1},
+  {q:'"very" — what mistake do many Spanish speakers make?',o:['They say "fery"','They say "bery"','They say "wery"','They say "mery"'],c:1},
+  {q:'For the TH sound, what do you do with your tongue?',o:['Roll it','Place it between your teeth','Press it to the roof','Keep it still'],c:1},
+])}
+${mkEx('s6b','PRONUNCIATION — ROUND 2',[
+  {q:'"world" — how many syllables does it have?',o:['3','2','1','4'],c:2},
+  {q:'"people" is pronounced:',o:['pe-o-ple','PEE-pul','pi-pol','pé-pul'],c:1},
+  {q:'"know" — which letter is silent?',o:['N','W','K','O'],c:2},
+  {q:'What makes "this" different from "dis"?',o:['Volume','The TH sound (tongue between teeth)','Speed','Nothing'],c:1},
+  {q:'"hour" — which letter is silent?',o:['O','U','R','H'],c:3},
+])}
+<div class="sec">// BOSS BATTLE //</div>
+<div class="battle"><div class="battle-top">★ BOSS: THE SILENT LETTER ★</div>
+<div class="battle-body"><div class="boss-img">${BOSS.B6}</div>
+<div class="hp-row"><span class="hp-lbl">BOSS HP</span><div class="hp-bg"><div class="hp-fill hp-e" id="bh6" style="width:100%"></div></div><span class="hp-val" id="bhv6">60/60</span></div>
+<div class="hp-row"><span class="hp-lbl">YOUR HP</span><div class="hp-bg"><div class="hp-fill hp-p" style="width:100%"></div></div><span class="hp-val">20/20</span></div>
+<div class="btxt" id="bt6"><span class="br">SILENT LETTER</span> hides inside a FULL SENTENCE!<br><br><span class="bb">Read this out loud in your head. Which sentence has ALL correct pronunciations?</span><br><span style="color:var(--dim);font-size:5px">Check: world / know / water / people / hour</span></div>
+<div class="choices" id="bc6">
+  <button class="cbtn" onclick="doBattle(6,'w',this)"><span class="cl">A)</span> The "wor-led" has many "peo-ple" who don't "k-now" that one "jou-er" of study changes everything.</button>
+  <button class="cbtn" onclick="doBattle(6,'w',this)"><span class="cl">B)</span> The "wurld" has many "PEE-pul" who don't "k-nou" that one "áuer" of study changes everything.</button>
+  <button class="cbtn" onclick="doBattle(6,'c',this)"><span class="cl">C)</span> The "wurld" has many "PEE-pul" who don't "nou" that one "áuer" of study changes everything.</button>
+  <button class="cbtn" onclick="doBattle(6,'w',this)"><span class="cl">D)</span> The "wurld" has many "pe-o-ple" who "nou" that one "áuer" of study changes everything.</button>
+</div>
+<div class="boss-fail-area" id="bfa6"><div class="boss-fail-txt">✗ DEFEATED... but heroes always rise again.<br>Return to World Map and practice more.</div>
+<button class="btn-restart" onclick="goMap()">↺ RESTART — WORLD MAP</button></div>
+</div></div>`;}
+
+function s7(){return `
+<div class="stage-bar">★ STAGE 1-7: READING & WRITING RUINS ★</div>
+${d('LYRA',SVG.LYRA,'* These ancient ruins hold the final language test.<br>* Reading and writing are the bridges between your mind and the English world.')}
+${d('CRUX',SVG.CRUX,'* NYEH! Don\'t think it will be easy! But... I believe in you. NYEH HEH!')}
+<div class="grammar-badge">🧠 GRAMMAR FOCUS: PRESENT SIMPLE</div>
+<div class="sbox"><span style="color:var(--gold)">★ WHAT IS THE PRESENT SIMPLE?</span><br><br>
+The <span style="color:var(--green)">Present Simple</span> describes:<br>
+<span style="color:#fff">→ Daily habits and routines</span><br>
+<span style="color:#fff">→ Facts that are always true</span><br>
+<span style="color:#fff">→ Things you do regularly</span><br><br>
+<span style="color:var(--dim)">Examples:</span><br>
+<span style="color:var(--blue)">I eat breakfast every day.</span> (habit)<br>
+<span style="color:var(--blue)">She works at a hospital.</span> (fact)<br>
+<span style="color:var(--blue)">We study English.</span> (regular activity)<br><br>
+<span style="color:var(--dim);font-size:5px">* This tense is the most used in everyday English *</span></div>
+<div class="tbl-wrap"><div class="tbl-label">[ SENTENCE STRUCTURE — PRESENT SIMPLE ]</div>
+<table class="vt"><tr><th>TYPE</th><th>FORMULA</th><th>EXAMPLE</th></tr>
+<tr><td class="ve">Positive</td><td class="vs">Subject + Verb + Object</td><td class="vx">I eat rice.</td></tr>
+<tr><td class="ve">Negative</td><td class="vs">Subject + don't/doesn't + Verb</td><td class="vx">I don't eat meat.</td></tr>
+<tr><td class="ve">Question</td><td class="vs">Do/Does + Subject + Verb?</td><td class="vx">Do you like pizza?</td></tr>
+<tr><td class="ve">With place</td><td class="vs">Subject + Verb + Place</td><td class="vx">I study at home.</td></tr>
+<tr><td class="ve">With time</td><td class="vs">Subject + Verb + Time</td><td class="vx">I wake up at 7am.</td></tr>
+</table></div>
+<div class="sbox"><span style="color:var(--gold)">★ SPECIAL RULE — HE/SHE/IT:</span><br><br>
+With <span style="color:var(--green)">He / She / It</span>, the verb gets <span style="color:var(--gold)">-S</span> at the end:<br><br>
+<span style="color:var(--blue)">I eat → She eat<span style="color:var(--gold)">s</span></span><br>
+<span style="color:var(--blue)">I work → He work<span style="color:var(--gold)">s</span></span><br>
+<span style="color:var(--blue)">I study → She stud<span style="color:var(--gold)">ies</span></span><br><br>
+<span style="color:var(--dim)">NEGATIVE: She doesn't eat → no -S on the verb!</span></div>
+<div class="sbox"><span style="color:var(--gold)">★ MINI STORY — READ AND UNDERSTAND:</span><br><br>
+<span style="color:var(--blue)">My name is Alex.</span> <span style="color:#fff">I am 25 years old.</span><br>
+<span style="color:var(--blue)">I am from Peru.</span> <span style="color:#fff">I work in an office.</span><br>
+<span style="color:var(--blue)">Every morning, I drink coffee.</span><br>
+<span style="color:#fff">I don't speak English perfectly yet.</span><br>
+<span style="color:var(--blue)">But I study every day.</span> <span style="color:var(--green)">I have DETERMINATION.</span><br><br>
+<span style="color:var(--gold)">COMPREHENSION QUESTIONS:</span><br>
+<span style="color:var(--dim)">1. What is his name?</span> <span style="color:var(--green)">→ His name is Alex.</span><br>
+<span style="color:var(--dim)">2. Where is he from?</span> <span style="color:var(--green)">→ He is from Peru.</span><br>
+<span style="color:var(--dim)">3. What does he drink?</span> <span style="color:var(--green)">→ He drinks coffee.</span></div>
+<div class="tbl-wrap"><div class="tbl-label">[ CONNECTOR WORDS — KEY TO FLUENCY ]</div>
+<table class="vt"><tr><th>ENGLISH</th><th>MEANING</th><th>EXAMPLE</th></tr>
+<tr><td class="ve">and</td><td class="vs">joins ideas</td><td class="vx">I like dogs and cats.</td></tr>
+<tr><td class="ve">but</td><td class="vs">shows contrast</td><td class="vx">I want to go, but I'm tired.</td></tr>
+<tr><td class="ve">because</td><td class="vs">gives a reason</td><td class="vx">I study because I want to grow.</td></tr>
+<tr><td class="ve">also / too</td><td class="vs">adds information</td><td class="vx">I speak Spanish, also English.</td></tr>
+<tr><td class="ve">so</td><td class="vs">shows result</td><td class="vx">I was hungry, so I ate.</td></tr>
+<tr><td class="ve">when</td><td class="vs">shows time</td><td class="vx">I listen when I study.</td></tr>
+</table></div>
+<div class="story-box">
+  <div style="font-size:7px;color:var(--gold);margin-bottom:14px">★ YOUR HERO STORY — WRITE IT! ★</div>
+
+  <div style="border:3px solid var(--blue);padding:12px;margin-bottom:14px;background:#000820">
+    <div style="font-size:5px;color:var(--blue);letter-spacing:3px;margin-bottom:8px">📖 EXAMPLE — READ THIS FIRST:</div>
+    <div style="font-size:6px;color:#fff;line-height:2.8">
+      <span style="color:var(--gold)">My name is</span> Alex.<br>
+      <span style="color:var(--gold)">I am</span> 25 years old and <span style="color:var(--gold)">I live in</span> Lima.<br>
+      <span style="color:var(--gold)">Every morning</span>, I drink coffee and read the news.<br>
+      <span style="color:var(--gold)">I love</span> music <span style="color:var(--gold)">because</span> it makes me happy.<br>
+      <span style="color:var(--gold)">I study English because</span> I want to travel the world.
+    </div>
+  </div>
+
+  <div style="font-size:5px;color:var(--dim);margin-bottom:10px;line-height:2.2">⬇ NOW YOUR TURN — Replace the highlighted parts with YOUR information:</div>
+  <textarea class="story-input" id="heroStory" placeholder="My name is ______.&#10;I am ___ years old and I live in ______.&#10;Every morning, I ______.&#10;I love ______ because ______.&#10;I study English because ______."></textarea>
+  <button class="btn-submit" onclick="submitStory()">► SUBMIT YOUR STORY ⚔️</button>
+  <div class="story-feedback" id="storyFeedback"></div>
+</div>
+${mkEx('s7a','READING & WRITING — ROUND 1',[
+  {q:'Which is the correct word order in English?',o:['Pizza like I.','I pizza like.','I like pizza.','Like pizza I.'],c:2},
+  {q:'"I ___ eat meat." (negative) — correct form:',o:['I not eat meat.','I don\'t eat meat.','I no eat meat.','I doesn\'t eat meat.'],c:1},
+  {q:'"___ you like music?" — what goes first?',o:['Are','Is','Do','Does'],c:2},
+  {q:'What does "because" express?',o:['contrast','addition','time','reason'],c:3},
+  {q:'Which sentence is correct?',o:['She don\'t work.','She doesn\'t work.','She not work.','She isn\'t work.'],c:1},
+])}
+${mkEx('s7b','PRESENT SIMPLE — ROUND 2',[
+  {q:'"She ___ every day." (to study) — Present Simple:',o:['study','studys','studies','studying'],c:2},
+  {q:'Negative of "He works here."',o:['He not works here.','He don\'t work here.','He doesn\'t work here.','He isn\'t work here.'],c:2},
+  {q:'"Do you speak English?" — affirmative answer:',o:['Yes, I speaks.','Yes, I do.','Yes, do I.','Yes, I does.'],c:1},
+  {q:'In Present Simple, "they" uses:',o:['speaks','speak','speaking','spoken'],c:1},
+  {q:'"I drink coffee every morning." is a:',o:['habit','past event','future event','command'],c:0},
+])}
+${mkEx('s7c','CONNECTORS — ROUND 3',[
+  {q:'"I\'m tired ___ I worked all day." — which connector?',o:['and','but','because','so'],c:2},
+  {q:'"I want to sleep, ___ I have to study." — which connector?',o:['because','and','but','so'],c:2},
+  {q:'"She is smart ___ very kind." — which connector?',o:['but','and','because','when'],c:1},
+  {q:'"___ I feel tired, I study anyway." — which connector?',o:['So','But','When','Because'],c:2},
+])}
+<div class="sec">// BOSS BATTLE //</div>
+<div class="battle"><div class="battle-top">★ BOSS: SENTENCE CHAOS ★</div>
+<div class="battle-body"><div class="boss-img">${BOSS.B7}</div>
+<div class="hp-row"><span class="hp-lbl">BOSS HP</span><div class="hp-bg"><div class="hp-fill hp-e" id="bh7" style="width:100%"></div></div><span class="hp-val" id="bhv7">90/90</span></div>
+<div class="hp-row"><span class="hp-lbl">YOUR HP</span><div class="hp-bg"><div class="hp-fill hp-p" style="width:100%"></div></div><span class="hp-val">20/20</span></div>
+<div class="btxt" id="bt7"><span class="br">SENTENCE CHAOS</span> scrambles an ENTIRE paragraph!<br><br><span class="bb">Find the paragraph where ALL sentences are in correct English order:</span></div>
+<div class="choices" id="bc7">
+  <button class="cbtn" onclick="doBattle(7,'w',this)"><span class="cl">A)</span> Morning every coffee drink I. Work at 9am go I. English study because I want to grow.</button>
+  <button class="cbtn" onclick="doBattle(7,'w',this)"><span class="cl">B)</span> I every morning drink coffee. I go at 9am to work. I study English because want to grow I.</button>
+  <button class="cbtn" onclick="doBattle(7,'c',this)"><span class="cl">C)</span> Every morning I drink coffee. I go to work at 9am. I study English because I want to grow.</button>
+  <button class="cbtn" onclick="doBattle(7,'w',this)"><span class="cl">D)</span> I coffee drink every morning. To work at 9am I go. Because I want to grow English study I.</button>
+</div>
+<div class="boss-fail-area" id="bfa7"><div class="boss-fail-txt">✗ DEFEATED... but heroes always rise again.<br>Return to World Map and practice more.</div>
+<button class="btn-restart" onclick="goMap()">↺ RESTART — WORLD MAP</button></div>
+</div></div>`;}
+
+function s8(){return `
+<div class="stage-bar">★ STAGE 1-8: FINAL EXAM — LEVEL 1 ★</div>
+${d('LYRA',SVG.LYRA,'* You made it, hero. All your teachers are here with you.<br>* This is the final exam of Level 1. Show us everything you have learned.')}
+${d('CRUX',SVG.CRUX,'* NYEH HEH HEH! Do not worry. If you made it this far... you can do it. NYEH!')}
+${d('NOVA',SVG.NOVA,'* Remember everything you practiced! You\'ve got this, hero!')}
+<div class="sec">// EXAM PART 1: ALPHABET & PRONUNCIATION //</div>
+${mkEx('e8a','ALPHABET & SOUNDS',[
+  {q:'How is the letter <span style="color:var(--gold)">A</span> pronounced?',o:['Like Spanish "a"','Like "ei"','Like "o"','Like "e"'],c:1},
+  {q:'How is the letter <span style="color:var(--gold)">H</span> pronounced?',o:['"jota"','"eich"','"haitch"','"ache"'],c:1},
+  {q:'How is the letter <span style="color:var(--gold)">G</span> pronounced?',o:['"ge"','"ji"','"yi"','"gu"'],c:2},
+  {q:'In "knight", how many letters are SILENT?',o:['0','1','2','3'],c:2},
+  {q:'"water" — correct pronunciation?',o:['uáter','uóter','uáder','uóder'],c:1},
+])}
+<div class="sec">// EXAM PART 2: VOCABULARY //</div>
+${mkEx('e8b','VOCABULARY',[
+  {q:'You are thirsty in a desert. You need ___:',o:['fire','food','music','water'],c:3},
+  {q:'Your car broke down on the highway. You call a friend: "I ___ ___!" (2 words):',o:['want help','need help','have help','give help'],c:1},
+  {q:'Someone gives you a birthday gift. You say:',o:['Please a lot','I don\'t know','Thank you very much','Nice to meet you'],c:2},
+  {q:'Today is Friday. The weekend starts ___:',o:['today','yesterday','tomorrow','this morning'],c:2},
+  {q:'The teacher explains something fast. You say: "Sorry, I ___ ___." (2 words):',o:['don\'t want','don\'t understand','can\'t speak','don\'t know'],c:1},
+])}
+<div class="sec">// EXAM PART 3: GRAMMAR //</div>
+${mkEx('e8c','VERB TO BE & PRESENT SIMPLE',[
+  {q:'"___ am a student." — which pronoun?',o:['You','He','I','She'],c:2},
+  {q:'"She ___ a doctor." — correct form of TO BE?',o:['am','are','is','be'],c:2},
+  {q:'Negative form of "I am happy":',o:['I not happy','I am not happy','I aren\'t happy','I no happy'],c:1},
+  {q:'Correct word order:',o:['Pizza like I.','I pizza like.','I like pizza.','Like pizza I.'],c:2},
+  {q:'"She ___ English every day." — Present Simple:',o:['studies','studys','study','studying'],c:0},
+])}
+<div class="sec">// EXAM PART 4: CONVERSATION //</div>
+${mkEx('e8d','PHRASES & CONVERSATION',[
+  {q:'"Good ___!" — morning greeting:',o:['night','morning','evening','day'],c:1},
+  {q:'How do you ask someone\'s name?',o:['Who are you?','What\'s your name?','How is you?','Where you from?'],c:1},
+  {q:'"Nice to meet you!" — correct reply:',o:['Thank you!','Nice to meet you too!','Good morning!','I\'m fine!'],c:1},
+  {q:'"How are you?" — best answer:',o:['I am Peru.','Fine I.','I\'m fine, thanks!','Hello yes.'],c:2},
+  {q:'"Can you speak slowly?" means:',o:['Can you speak fast?','Can you repeat?','Can you speak slowly?','Can you help me?'],c:2},
+])}
+<div class="sec">// LEVEL 1 FINAL BOSS //</div>
+<div class="battle"><div class="battle-top">⚔️ FINAL BOSS: SELF-DOUBT — FINAL FORM ⚔️</div>
+<div class="battle-body"><div class="boss-img">${BOSS.B8}</div>
+<div style="text-align:center;font-size:5px;color:var(--red);margin-bottom:12px;animation:blink .5s step-start infinite">★ THE HARDEST ENEMY YOU WILL EVER FACE ★</div>
+<div class="hp-row"><span class="hp-lbl">BOSS HP</span><div class="hp-bg"><div class="hp-fill hp-e" id="bh8" style="width:100%"></div></div><span class="hp-val" id="bhv8">9999/9999</span></div>
+<div class="hp-row"><span class="hp-lbl">YOUR HP</span><div class="hp-bg"><div class="hp-fill hp-p" style="width:100%"></div></div><span class="hp-val">20/20</span></div>
+<div class="btxt" id="bt8"><span class="br">★ SELF-DOUBT</span> appears in its most powerful form...<br><br>
+<span style="color:#333">"You will never learn English. It is too hard for you."</span><br><br>
+<span class="by">LYRA, CRUX, ZACK and NOVA</span> stand by your side.<br>
+<span class="bb">"What is your secret weapon, hero?"</span></div>
+<div class="choices" id="bc8">
+  <button class="cbtn" onclick="doBattle(8,'w',this)"><span class="cl">A)</span> "You're right. I give up."</button>
+  <button class="cbtn" onclick="doBattle(8,'c',this)"><span class="cl">B)</span> "I have DETERMINATION!"</button>
+  <button class="cbtn" onclick="doBattle(8,'w',this)"><span class="cl">C)</span> "Maybe I'll try tomorrow."</button>
+  <button class="cbtn" onclick="doBattle(8,'w',this)"><span class="cl">D)</span> "English is not for me."</button>
+</div>
+<div class="boss-fail-area" id="bfa8"><div class="boss-fail-txt">✗ DEFEATED... but heroes always rise again.<br>Return to World Map. DETERMINATION awaits!</div>
+<button class="btn-restart" onclick="goMap()">↺ RESTART — WORLD MAP</button></div>
+</div></div>
+<div class="mission"><div class="mission-head">★ YOUR FINAL PROMISE — LEVEL 1 ★</div>
+<div class="mission-body">
+<div class="mission-li">I completed this level with DETERMINATION</div>
+<div class="mission-li">I will practice English at least 20 min every day</div>
+<div class="mission-li">I will not give up when it gets hard</div>
+<div class="mission-li">I will continue to Level 2 and keep growing</div>
+</div></div>`;}
+
+function instrContent(){return `
+<div class="stage-bar">📋 HOW TO PLAY + 30-DAY STUDY PLAN</div>
+${d('LYRA — your guide',SVG.LYRA,'* Before you begin your adventure, read this carefully.<br>* This guide is your treasure map. Use it well and English will be yours.')}
+<div class="sec">// HOW THIS GAME WORKS //</div>
+<div class="sbox"><span style="color:var(--gold)">★ HOW TO PLAY:</span><br><br>
+<span style="color:var(--green)">1.</span> <span style="color:#fff">Complete stages in order — each one unlocks the next</span><br>
+<span style="color:var(--green)">2.</span> <span style="color:#fff">Read the content and answer exercises in each stage</span><br>
+<span style="color:var(--green)">3.</span> <span style="color:#fff">You MUST complete exercises before facing the BOSS</span><br>
+<span style="color:var(--green)">4.</span> <span style="color:#fff">Defeat the BOSS to earn XP and unlock the next stage</span><br>
+<span style="color:var(--green)">5.</span> <span style="color:#fff">If you lose to the boss, use RESTART to return to the map</span><br>
+<span style="color:var(--green)">6.</span> <span style="color:#fff">Collect 1000 XP to complete Level 1</span><br><br>
+<span style="color:var(--dim);font-size:5px">* your progress is saved automatically on this device *</span></div>
+<div class="sbox"><span style="color:var(--gold)">★ STAGE MAP:</span><br><br>
+<span style="color:var(--red)">1-1</span> <span style="color:#fff">Alphabet Kingdom</span> <span style="color:var(--dim)">→ 26 letters + pronunciation + pixel images</span><br>
+<span style="color:var(--gold)">1-2</span> <span style="color:#fff">Vocabulary Village</span> <span style="color:var(--dim)">→ 200+ words with pixel art</span><br>
+<span style="color:var(--purple)">1-3</span> <span style="color:#fff">Grammar Dungeon</span> <span style="color:var(--dim)">→ Pronouns and verb TO BE</span><br>
+<span style="color:var(--green)">1-4</span> <span style="color:#fff">Conversation Quest</span> <span style="color:var(--dim)">→ Real dialogues and greetings</span><br>
+<span style="color:var(--blue)">1-5</span> <span style="color:#fff">Numbers & Time Temple</span> <span style="color:var(--dim)">→ Numbers 1–1000 and time</span><br>
+<span style="color:#ff8844">1-6</span> <span style="color:#fff">Pronunciation Powerup</span> <span style="color:var(--dim)">→ Difficult sounds and TH</span><br>
+<span style="color:#ff66aa">1-7</span> <span style="color:#fff">Reading & Writing Ruins</span> <span style="color:var(--dim)">→ Present Simple + write your story</span><br>
+<span style="color:var(--gold)">1-8</span> <span style="color:#fff">FINAL EXAM</span> <span style="color:var(--dim)">→ Full review + final boss</span></div>
+<div class="sec">// 30-DAY STUDY PLAN //</div>
+${d('NOVA',SVG.NOVA,'* The secret to learning English is not studying 5 hours on Saturday.<br>* It is 20 minutes EVERY DAY. This plan tells you exactly what to do.')}
+<div class="tbl-wrap"><div class="tbl-label">[ WEEK 1 — FOUNDATIONS (DAYS 1–7) ]</div>
+<table class="vt"><tr><th>DAYS</th><th>FOCUS</th><th>DAILY TASK</th><th>STAGE</th></tr>
+<tr><td class="ve">Day 1–2</td><td class="vs">Alphabet + first words</td><td class="vx">Write the alphabet 3 times out loud</td><td class="vp">1-1</td></tr>
+<tr><td class="ve">Day 3–4</td><td class="vs">Daily vocabulary</td><td class="vx">Learn 10 new words per day</td><td class="vp">1-2</td></tr>
+<tr><td class="ve">Day 5–6</td><td class="vs">Verb TO BE</td><td class="vx">Mirror practice: I am, You are, She is...</td><td class="vp">1-3</td></tr>
+<tr><td class="ve">Day 7</td><td class="vs">WEEK 1 REVIEW</td><td class="vx">Redo all exercises from 1-1 to 1-3</td><td class="vp">★</td></tr>
+</table></div>
+<div class="tbl-wrap"><div class="tbl-label">[ WEEK 2 — VOCABULARY (DAYS 8–14) ]</div>
+<table class="vt"><tr><th>DAYS</th><th>FOCUS</th><th>DAILY TASK</th><th>STAGE</th></tr>
+<tr><td class="ve">Day 8–9</td><td class="vs">Greetings + conversation</td><td class="vx">Practice the Stage 1-4 dialogue out loud</td><td class="vp">1-4</td></tr>
+<tr><td class="ve">Day 10–11</td><td class="vs">Numbers and time</td><td class="vx">Count everything you see in English</td><td class="vp">1-5</td></tr>
+<tr><td class="ve">Day 12–13</td><td class="vs">Pronunciation</td><td class="vx">Practice the TH sound for 5 min in the mirror</td><td class="vp">1-6</td></tr>
+<tr><td class="ve">Day 14</td><td class="vs">WEEK 2 REVIEW</td><td class="vx">Write 10 sentences using what you learned</td><td class="vp">★</td></tr>
+</table></div>
+<div class="tbl-wrap"><div class="tbl-label">[ WEEK 3 — CONVERSATION (DAYS 15–21) ]</div>
+<table class="vt"><tr><th>DAYS</th><th>FOCUS</th><th>DAILY TASK</th><th>STAGE</th></tr>
+<tr><td class="ve">Day 15–17</td><td class="vs">Reading and writing</td><td class="vx">Read the Stage 1-7 story and write your own</td><td class="vp">1-7</td></tr>
+<tr><td class="ve">Day 18–19</td><td class="vs">General review</td><td class="vx">Redo exercises that were hardest for you</td><td class="vp">1-1→1-7</td></tr>
+<tr><td class="ve">Day 20–21</td><td class="vs">Final exam prep</td><td class="vx">Review vocabulary from each stage</td><td class="vp">★</td></tr>
+</table></div>
+<div class="tbl-wrap"><div class="tbl-label">[ WEEK 4 — MASTERY (DAYS 22–30) ]</div>
+<table class="vt"><tr><th>DAYS</th><th>FOCUS</th><th>DAILY TASK</th><th>STAGE</th></tr>
+<tr><td class="ve">Day 22–24</td><td class="vs">Final Exam + Boss</td><td class="vx">Complete Stage 1-8 and all its exercises</td><td class="vp">1-8</td></tr>
+<tr><td class="ve">Day 25–27</td><td class="vs">Conversation practice</td><td class="vx">Talk to yourself in English for 10 min/day</td><td class="vp">★</td></tr>
+<tr><td class="ve">Day 28–29</td><td class="vs">Songs and listening</td><td class="vx">Sing 1 English song per day</td><td class="vp">★</td></tr>
+<tr><td class="ve">Day 30</td><td class="vs">★ GRADUATION DAY ★</td><td class="vx">Record yourself speaking for 1 minute in English!</td><td class="vp">🏆</td></tr>
+</table></div>
+<button class="btn-next" onclick="goMap()" style="margin-top:18px">► LET'S GO! BACK TO WORLD MAP</button>`;}
+
+// ══════════ STORY VALIDATION ══════════
+function submitStory(){
+  const txt=(document.getElementById('heroStory')||{}).value||'';
+  const fb=document.getElementById('storyFeedback');
+  if(!fb)return;
+  fb.style.display='block';
+  const words=txt.trim().split(/\s+/).filter(Boolean).length;
+  const hasName=/my name is/i.test(txt);
+  const hasFrom=/I('m| am) from/i.test(txt)||/I live in/i.test(txt);
+  const hasBecause=/because/i.test(txt);
+  const hasEvery=/every/i.test(txt);
+  let score=0,tips=[];
+  if(words>=20){score++;}else{tips.push('→ Try to write more than 20 words');}
+  if(hasName){score++;}else{tips.push('→ Include "My name is ___"');}
+  if(hasFrom){score++;}else{tips.push('→ Include "I\'m from ___" or "I live in ___"');}
+  if(hasBecause){score++;}else{tips.push('→ Use "because" in one sentence');}
+  if(hasEvery){score++;}else{tips.push('→ Mention a routine with "every ___"');}
+  if(score>=4){
+    fb.style.color='var(--green)';fb.style.borderColor='var(--green)';
+    fb.innerHTML=`✓ STORY APPROVED! Score: ${score}/5<br><br>★ CRUX: "NYEH... not bad hero. Not bad at all!"<br>★ LYRA: "Your story is real. That makes it powerful."<br><br><span style="color:var(--gold)">+25 XP BONUS for writing your story in English!</span>`;
+  }else if(score>=2){
+    fb.style.color='var(--gold)';fb.style.borderColor='var(--gold)';
+    fb.innerHTML=`⚡ ALMOST THERE... Score: ${score}/5<br><br>Improve these points:<br>${tips.join('<br>')}<br><br>LYRA: "You're on the right track! Fix it and try again."`;
+  }else{
+    fb.style.color='var(--dim)';fb.style.borderColor='var(--dim)';
+    fb.innerHTML=`✗ Needs more work. Score: ${score}/5<br><br>Points to improve:<br>${tips.join('<br>')}<br><br>CRUX: "NYEH... use Alex's story as your guide. You can do it!"`;
+  }
+}
+
+// ══════════ GAME ENGINE ══════════
+const CONTENT=[s1,s2,s3,s4,s5,s6,s7,s8];
+
+function startGame(){
+  const existed=load();
+  document.getElementById('screen-start').style.display='none';
+  document.getElementById('hud').classList.add('active');
+  if(!existed){openInstructions();}else{goMap();}
+}
+
+function goMap(){
+  show('map');renderMap();updateHud();
+}
+
+function openInstructions(){
+  show('instructions');
+  document.getElementById('instrContent').innerHTML=instrContent();
+}
+
+function show(name){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const el=document.getElementById('screen-'+name);
+  el.classList.add('active');
+  el.scrollTop=0;window.scrollTo(0,0);document.documentElement.scrollTop=0;
+}
+
+function renderMap(){
+  const list=document.getElementById('stageList');
+  list.innerHTML='';
+  STAGES.forEach((s,i)=>{
+    const unlocked=i===0||ST.done.has(i-1);
+    const done=ST.done.has(i);
+    const row=document.createElement('div');
+    row.className='stage-row '+(unlocked?'can-play':'is-locked');
+    if(unlocked)row.onclick=()=>playStage(i);
+    let st;
+    if(done)st=`<span class="sr-status st-done">✔ DONE</span>`;
+    else if(unlocked)st=`<span class="sr-status st-play">► PLAY</span>`;
+    else st=`<span class="sr-status st-lock">🔒</span>`;
+    row.innerHTML=`<span class="sr-id" style="color:${s.col}">${s.id}</span><span class="sr-name">${s.name}</span><span class="sr-xp">+${s.xp} XP</span>${st}`;
+    list.appendChild(row);
+  });
+  const pct=Math.min(100,(ST.xp/ST.maxXp)*100);
+  document.getElementById('mapFill').style.width=pct+'%';
+  document.getElementById('mapPts').textContent=ST.xp+' / 1000 XP';
+}
+
+function playStage(idx){
+  if(idx!==0&&!ST.done.has(idx-1))return;
+  ST.cur=idx;
+  show('game');
+  document.getElementById('hudStage').textContent=STAGES[idx].id;
+  const gc=document.getElementById('gameContent');
+  gc.innerHTML=CONTENT[idx]();
+  const area=document.createElement('div');
+  area.id='scArea';area.className='sc-area';
+  const nxt=idx<7?'NEXT STAGE — '+STAGES[idx+1].id:'COMPLETE LEVEL 1 ★';
+  area.innerHTML=`<div class="sc-badge" id="scBadge">★ STAGE CLEARED ★<span>scroll down and continue</span></div><button class="btn-next" onclick="completeStage()">► ${nxt}</button>`;
+  gc.appendChild(area);
+  window.onscroll=()=>{
+    const d=document.documentElement;
+    document.getElementById('rp').style.width=Math.min(100,(d.scrollTop+window.innerHeight)/d.scrollHeight*100)+'%';
+  };
+}
+
+function choosePath(btn,path){
+  document.querySelectorAll('.pbtn').forEach(b=>b.classList.remove('chosen'));
+  btn.classList.add('chosen');
+  const r=document.getElementById('path-result');
+  r.style.display='block';
+  if(path==='courage'){
+    r.innerHTML=`<span style="color:var(--gold)">PATH OF COURAGE chosen!</span><br><br>Say each letter OUT LOUD right now:<br><br><span style="color:var(--green);font-size:8px;line-height:2.8">A-B-C-D-E-F-G<br>H-I-J-K-L-M-N<br>O-P-Q-R-S-T-U<br>V-W-X-Y-Z</span><br><br><span style="color:var(--dim);font-size:5px">* LYRA: "Your voice is your most powerful weapon, hero." *</span>`;
+  }else{
+    r.innerHTML=`<span style="color:var(--blue)">PATH OF WISDOM chosen!</span><br><br>Write each letter with its pronunciation:<br><br><span style="color:var(--green);font-size:6px;line-height:2.5">A=ei · B=bi · C=si · D=di · E=i<br>F=ef · G=yi · H=eich · I=ai · J=yei<br>K=kei · L=el · M=em · N=en · O=ou<br>P=pi · Q=kiu · R=ar · S=es · T=ti<br>U=iu · V=vi · W=dóbol-iu · X=eks · Y=uai · Z=si</span><br><br><span style="color:var(--dim);font-size:5px">* LYRA: "What is written stays in memory forever." *</span>`;
+  }
+}
+
+// ══════════ BOSS BATTLE — with exercise gate ══════════
+function doBattle(bid,res,btn){
+  // Gate: must have answered at least one exercise in this stage
+  if(!stageExercisesStarted()){
+    document.getElementById('noShortcut').classList.add('on');
+    return;
+  }
+  const menu=document.getElementById('bc'+bid);
+  if(!menu)return;
+  menu.querySelectorAll('.cbtn').forEach(b=>b.disabled=true);
+  const ok=res==='c';
+  btn.classList.add(ok?'ok':'no');
+  if(!ok){menu.querySelectorAll('.cbtn').forEach(b=>{const oc=b.getAttribute('onclick');if(oc&&oc.includes("'c'"))b.classList.add('ok');});}
+  const msgs=ok?FB_OK:FB_BAD;
+  const msg=msgs[Math.floor(Math.random()*msgs.length)];
+  const bt=document.getElementById('bt'+bid);
+  const bh=document.getElementById('bh'+bid);
+  if(ok&&bh)bh.style.width='0%';
+  if(bt)bt.innerHTML=`<span style="color:${ok?'var(--green)':'var(--red)'}">${msg}</span>`+(ok?'<br><br><span class="by">★ ENEMY DEFEATED! ★</span>':'');
+  showFB(ok,msg);
+  if(ok){
+    setTimeout(()=>{
+      const a=document.getElementById('scArea');
+      if(a){
+        a.style.display='block';
+        const b=document.getElementById('scBadge');
+        if(b)b.innerHTML=`✔ STAGE ${STAGES[ST.cur].id} CLEARED — +${STAGES[ST.cur].xp} XP<span>scroll down and continue!</span>`;
+        a.scrollIntoView({behavior:'smooth'});
+      }
+    },700);
+  }else{
+    setTimeout(()=>{const fa=document.getElementById('bfa'+bid);if(fa)fa.style.display='block';},800);
+  }
+}
+
+function closeNoShortcut(){
+  document.getElementById('noShortcut').classList.remove('on');
+}
+
+function showFB(ok,msg){
+  const bar=document.getElementById('fbBar');
+  bar.className=ok?'ok':'no';
+  bar.textContent=msg;
+  setTimeout(()=>bar.classList.add('off'),3500);
+}
+
+function completeStage(){
+  const idx=ST.cur;
+  if(!ST.done.has(idx)){
+    ST.done.add(idx);
+    ST.xp=Math.min(ST.maxXp,ST.xp+STAGES[idx].xp);
+    save();
+  }
+  updateHud();
+  const r=REWARDS[idx];
+  showLU(r.t,r.b,r.f,idx);
+}
+
+function showLU(title,badge,flavor,idx){
+  document.getElementById('luTitle').textContent=title;
+  document.getElementById('luBadge').textContent=badge;
+  document.getElementById('luFlavor').innerHTML=flavor.replace(/\n/g,'<br>');
+  const btn=document.getElementById('luBtn');
+  if(idx===7)btn.textContent='★ SEE FINAL RESULTS';
+  else btn.textContent='► NEXT STAGE — '+STAGES[idx+1].id;
+  document.getElementById('luOverlay').classList.add('on');
+  burstParticles();
+}
+
+function closeLU(){
+  document.getElementById('luOverlay').classList.remove('on');
+  const idx=ST.cur;
+  if(idx===7&&ST.done.has(7)){show('clear');burstParticles();setTimeout(burstParticles,600);setTimeout(burstParticles,1200);}
+  else if(ST.done.has(idx)&&idx<7){playStage(idx+1);}
+  else{goMap();}
+}
+
+function goLevel2(){
+  const phone = '51993332846'; // tu número con código de país
+  const message = encodeURIComponent(
+    'Hi! 🎮 I finished Level 1 and want to unlock Level 2.'
+  );
+
+  window.open(
+    `https://wa.me/${phone}?text=${message}`,
+    '_blank'
+  );
+}
+
+function updateHud(){
+  const pct=Math.min(100,(ST.xp/ST.maxXp)*100);
+  document.getElementById('hudFill').style.width=pct+'%';
+  document.getElementById('hudPts').textContent=ST.xp+'/1000';
+}
+
+function burstParticles(){
+  const syms=['★','♪','✦','◆','▲','🏆','⚔️'];
+  const cols=['#ffdd00','#4dfa6a','#ff4444','#6ab4ff','#aa66ff'];
+  for(let i=0;i<18;i++){
+    const p=document.createElement('div');
+    p.className='pt';
+    p.textContent=syms[Math.floor(Math.random()*syms.length)];
+    p.style.cssText=`left:${10+Math.random()*80}%;top:${10+Math.random()*80}%;color:${cols[Math.floor(Math.random()*cols.length)]};font-size:${10+Math.random()*14}px;--dx:${Math.random()*260-130}px;--dy:${Math.random()*260-130}px`;
+    document.body.appendChild(p);
+    setTimeout(()=>p.remove(),950);
+  }
+}
+
+load();
+</script>
+</body>
+</html>
